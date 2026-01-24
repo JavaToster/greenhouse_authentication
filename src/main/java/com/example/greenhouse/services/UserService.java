@@ -40,7 +40,6 @@ public class UserService implements CustomUserDetailsService {
         String token = deviceTokenUtil.generateToken(authenticationDTO.getTelegramId());
         String jwt = jwtUtil.generateToken(authenticationDTO.getTelegramId());
 
-        newUser.setDeviceToken(token);
         newUser.setPassword(passwordEncoder.encode(authenticationDTO.getPassword()));
 
         userRepository.save(newUser);
@@ -57,6 +56,6 @@ public class UserService implements CustomUserDetailsService {
         }
 
         String jwt = jwtUtil.generateToken(authenticationDTO.getTelegramId());
-        return new AfterRegisterDataDTO(jwt, user.getDeviceToken());
+        return new AfterRegisterDataDTO(jwt, "");
     }
 }
