@@ -2,6 +2,7 @@ package com.example.greenhouse.configurations.security;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.example.greenhouse.security.JwtUtil;
+import com.example.greenhouse.services.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -23,7 +24,7 @@ import java.util.Collections;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-
+    private final UserService userService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -31,7 +32,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
         try {
             if (authHeader == null || authHeader.isBlank() || !authHeader.startsWith("Bearer ")) {
-                // Если заголовок отсутствует - пропускаем запрос дальше
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -44,8 +44,8 @@ public class JwtFilter extends OncePerRequestFilter {
             }
 
             long telegramId = jwtUtil.validateTokenAndRetrieveSubject(jwt);
-            UserDetails userDetails = new User(String.valueOf(telegramId), "", Collections.emptyList());
 
+            UserDetails userDetails = new com.example.greenhouse.security.UserDetails(userService.findUserByTelegramId(telegramId));
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(
                             userDetails,

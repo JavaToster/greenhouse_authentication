@@ -12,8 +12,6 @@ public class Convertor {
     private final ModelMapper modelMapper;
 
     public User convertToUser(AuthenticationDTO authenticationDTO){
-        User user = modelMapper.map(authenticationDTO, User.class);
-        user.setId(0);
-        return user;
+        return modelMapper.map(authenticationDTO, User.class);
     }
 }

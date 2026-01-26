@@ -7,5 +7,4 @@ import lombok.Data;
 @AllArgsConstructor
 public class AfterRegisterDataDTO {
     private String jwt;
-    private String token;
 }
