@@ -21,9 +21,10 @@ public class User {
     @Column(name = "password")
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     private List<Device> devices;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
 }

@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260124-1
+      author: TosterW
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: telegram_id
+                  type: bigint
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(40)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: password
+                  type: varchar(60)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: varchar(20)
+                  defaultValue: "USER"
+
+        - createTable:
+            tableName: devices
+            columns:
+              - column:
+                  name: device_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: secret
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: status
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: owner_id
+                  type: bigint
+

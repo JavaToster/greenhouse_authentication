@@ -60,3 +60,7 @@ spring:
       url: ${CLIENTS_USER}
     email:
       url: ${CLIENTS_EMAIL}
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
