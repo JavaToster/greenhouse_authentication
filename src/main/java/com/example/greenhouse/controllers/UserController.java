@@ -23,8 +23,8 @@ public class UserController {
 
     @DeleteMapping("/{telegramId}/remove")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> removeUser(@PathVariable("telegramId") long id, Principal principal){
-        userService.remove(id, Long.valueOf(principal.getName()));
+    public ResponseEntity<?> removeUser(@PathVariable("telegramId") long id){
+        userService.remove(id);
         return ResponseEntity.ok(id);
     }
 }

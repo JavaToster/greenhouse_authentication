@@ -4,7 +4,7 @@ import com.example.greenhouse.DTO.auth.AfterRegisterDataDTO;
 import com.example.greenhouse.DTO.auth.AuthenticationDTO;
 import com.example.greenhouse.exceptions.auth.UserAlreadyExistException;
 import com.example.greenhouse.models.user.User;
-import com.example.greenhouse.repositories.UserRepository;
+import com.example.greenhouse.repositories.postgres.UserRepository;
 import com.example.greenhouse.security.CustomUserDetailsService;
 import com.example.greenhouse.security.JwtUtil;
 import com.example.greenhouse.util.Convertor;

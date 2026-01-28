@@ -1,4 +1,4 @@
-package com.example.greenhouse.repositories;
+package com.example.greenhouse.repositories.postgres;
 
 import com.example.greenhouse.models.device.Device;
 import org.springframework.data.jpa.repository.JpaRepository;

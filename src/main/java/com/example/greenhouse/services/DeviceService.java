@@ -5,10 +5,12 @@ import com.example.greenhouse.DTO.device.CreateDeviceDTO;
 import com.example.greenhouse.DTO.device.CreatedDeviceDTO;
 import com.example.greenhouse.models.device.Device;
 import com.example.greenhouse.models.user.User;
-import com.example.greenhouse.repositories.DeviceRepository;
-import com.example.greenhouse.repositories.UserRepository;
+import com.example.greenhouse.repositories.postgres.DeviceRepository;
+import com.example.greenhouse.repositories.postgres.UserRepository;
+import com.example.greenhouse.repositories.redis.RedisRepository;
 import com.example.greenhouse.security.JwtUtil;
 import com.example.greenhouse.util.enums.DeviceStatus;
+import com.example.greenhouse.util.redis.RedisKeyCreator;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -23,22 +25,24 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class DeviceService {
     private final DeviceRepository deviceRepository;
-    private final Map<String, String> challengeStorage = new ConcurrentHashMap<>();
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private static final long CHALLENGE_TTL_IN_SECONDS = 30;
+    private final RedisRepository redisRepository;
+    private final RedisKeyCreator redisKeyCreator;
 
     public String generateChallenge(String deviceId) {
         String challenge = UUID.randomUUID().toString();
-        challengeStorage.put(deviceId.toString(), challenge);
+
+        redisRepository.saveWithTTLInSeconds(redisKeyCreator.createChallengeKey(deviceId), challenge, CHALLENGE_TTL_IN_SECONDS);
+
         return challenge;
     }
 
@@ -46,7 +50,8 @@ public class DeviceService {
         Device device = deviceRepository.findById(deviceAuthRequestDTO.getDeviceId())
                 .orElseThrow(() -> new BadCredentialsException("Unknown device"));
 
-        String issuedChallenge = challengeStorage.get(deviceAuthRequestDTO.getDeviceId().toString());
+        String issuedChallenge = redisRepository.findByKey(redisKeyCreator.createChallengeKey(deviceAuthRequestDTO.getDeviceId().toString()), String.class);
+
         if(issuedChallenge == null){
             throw new BadCredentialsException("No challenge issued or expired");
         }
@@ -56,6 +61,8 @@ public class DeviceService {
         }
 
         validateSignature(deviceAuthRequestDTO.getSignature(), issuedChallenge, device.getSecret());
+
+        redisRepository.remove(redisKeyCreator.createChallengeKey(deviceAuthRequestDTO.getDeviceId().toString()));
 
         return jwtUtil.generateToken(device.getOwner().getTelegramId());
     }
