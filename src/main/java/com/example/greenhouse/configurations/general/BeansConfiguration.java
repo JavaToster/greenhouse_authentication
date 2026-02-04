@@ -13,10 +13,6 @@ import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class BeansConfiguration {
-
-    @Value("${spring.security.devices.token.secret}")
-    private String SECRET_KEY;
-
     @Bean
     public ModelMapper modelMapper(){
         return new ModelMapper();
@@ -25,10 +21,5 @@ public class BeansConfiguration {
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public SecretKeySpec deviceTokenKeySpec(){
-        return new SecretKeySpec(SECRET_KEY.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
     }
 }

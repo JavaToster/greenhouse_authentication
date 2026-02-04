@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class AuthenticationDTO {
     @NotNull(message = "Telegram Id не может быть пустым")
     private long telegramId;
+    @NotBlank(message = "Email не должен быть пустым")
     @Email(message = "Некорректный формат email")
     private String email;
     @NotBlank(message = "Пароль не должен быть пустым")

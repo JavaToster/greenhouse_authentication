@@ -65,7 +65,7 @@ public class DeviceService {
             throw new BadCredentialsException("Challenge mismatch");
         }
 
-        validateSignature(deviceAuthRequestDTO.getSignature(), issuedChallenge, device.getSecret());
+        validateSignature(deviceAuthRequestDTO.getSignature(), issuedChallenge, encryptionUtil.decrypt(device.getSecret()));
 
         redisRepository.remove(redisKeyCreator.createChallengeKey(deviceAuthRequestDTO.getDeviceId().toString()));
 
