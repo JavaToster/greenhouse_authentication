@@ -2,7 +2,9 @@ package com.example.greenhouse.exceptions;
 
 import com.example.greenhouse.DTO.error.ErrorResponseDTO;
 import com.example.greenhouse.exceptions.auth.UserAlreadyExistException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -33,5 +35,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(new ErrorResponseDTO(HttpStatus.UNAUTHORIZED.value(), exc.getMessage()));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponseDTO> exceptionHandle(DataIntegrityViolationException exc){
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorResponseDTO(HttpStatus.UNAUTHORIZED.value(), "Объект с такими данными уже существует!(Проверьте email или telegramId)"));
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> exceptionHandle(EntityNotFoundException exc){
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponseDTO(HttpStatus.PERMANENT_REDIRECT.value(), exc.getMessage()));
     }
 }

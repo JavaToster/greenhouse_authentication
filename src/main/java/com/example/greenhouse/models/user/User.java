@@ -1,5 +1,6 @@
 package com.example.greenhouse.models.user;
 
+import com.example.greenhouse.models.clusters.Cluster;
 import com.example.greenhouse.models.device.Device;
 import com.example.greenhouse.util.enums.Role;
 import jakarta.persistence.*;
@@ -25,6 +26,6 @@ public class User {
     private Role role;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-    private List<Device> devices;
+    private List<Cluster> clusters ;
 
 }

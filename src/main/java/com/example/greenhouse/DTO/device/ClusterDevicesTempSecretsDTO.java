@@ -2,14 +2,12 @@ package com.example.greenhouse.DTO.device;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
-public class CreatedDeviceDTO {
-    private UUID uuid;
-    private String secret;
+public class ClusterDevicesTempSecretsDTO {
+    private UUID id;
+    private String rawSecret;
 }

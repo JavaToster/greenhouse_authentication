@@ -4,12 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreatedDeviceDTO {
-    private UUID uuid;
-    private String secret;
+public class DevicesSecretWrapper {
+    private UUID clusterId;
+    private List<ClusterDevicesTempSecretsDTO> secrets;
 }

@@ -1,0 +1,86 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260124-1
+      author: TosterW
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: telegram_id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(40)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: password
+                  type: varchar(60)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: varchar(20)
+                  defaultValue: "ROLE_UNKNOWN"
+
+        - createTable:
+            tableName: clusters
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  defaultValueComputed: "gen_random_uuid()"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(200)
+              - column:
+                  name: owner_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_cluster_owner
+                    referencedTableName: users
+                    referencedColumnNames: telegram_id
+
+        - createTable:
+            tableName: devices
+            columns:
+              - column:
+                  name: device_id
+                  type: uuid
+                  defaultValueComputed: "gen_random_uuid()"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: secret
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: status
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cluster_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_device_cluster
+                    referencedTableName: clusters
+                    referencedColumnNames: id

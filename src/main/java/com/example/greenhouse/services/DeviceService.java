@@ -3,16 +3,19 @@ package com.example.greenhouse.services;
 import com.example.greenhouse.DTO.auth.DeviceAuthRequestDTO;
 import com.example.greenhouse.DTO.device.CreateDeviceDTO;
 import com.example.greenhouse.DTO.device.CreatedDeviceDTO;
+import com.example.greenhouse.models.clusters.Cluster;
 import com.example.greenhouse.models.device.Device;
 import com.example.greenhouse.models.user.User;
 import com.example.greenhouse.repositories.postgres.DeviceRepository;
 import com.example.greenhouse.repositories.postgres.UserRepository;
 import com.example.greenhouse.repositories.redis.RedisRepository;
+import com.example.greenhouse.security.EncryptionUtil;
 import com.example.greenhouse.security.JwtUtil;
 import com.example.greenhouse.util.enums.DeviceStatus;
 import com.example.greenhouse.util.redis.RedisKeyCreator;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +28,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -33,10 +38,10 @@ import java.util.UUID;
 public class DeviceService {
     private final DeviceRepository deviceRepository;
     private final JwtUtil jwtUtil;
-    private final UserRepository userRepository;
     private static final long CHALLENGE_TTL_IN_SECONDS = 30;
     private final RedisRepository redisRepository;
     private final RedisKeyCreator redisKeyCreator;
+    private final EncryptionUtil encryptionUtil;
 
     public String generateChallenge(String deviceId) {
         String challenge = UUID.randomUUID().toString();
@@ -64,7 +69,7 @@ public class DeviceService {
 
         redisRepository.remove(redisKeyCreator.createChallengeKey(deviceAuthRequestDTO.getDeviceId().toString()));
 
-        return jwtUtil.generateToken(device.getOwner().getTelegramId());
+        return jwtUtil.generateToken(device.getCluster().getOwner().getTelegramId());
     }
 
     private void validateSignature(String clientSig, String data, String secret){
@@ -92,23 +97,24 @@ public class DeviceService {
         }
     }
 
-    @Transactional
-    public CreatedDeviceDTO addNewDevice(CreateDeviceDTO createDeviceDTO) {
-        User user = userRepository.findByTelegramId(createDeviceDTO.getTelegramId())
-                .orElseThrow(() -> new EntityNotFoundException("User with this id not found!"));
+    public List<Device> createNewDevices(Cluster cluster, int count){
+        return IntStream.range(0, count)
+                .mapToObj(i -> createNewDevice(cluster))
+                .toList();
+    }
 
-        UUID uuid = UUID.randomUUID();
-        String secret = generateSecret();
-
+    public Device createNewDevice(Cluster cluster) {
         Device device = new Device();
-        device.setDeviceId(uuid);
-        device.setOwner(user);
-        device.setSecret(secret);
-        device.setStatus(DeviceStatus.ACTIVE);
 
-        deviceRepository.save(device);
+        device.setId(UUID.randomUUID());
+        device.setCluster(cluster);
+        device.setStatus(DeviceStatus.PENDING_ACTIVAT);
 
-        return new CreatedDeviceDTO(uuid.toString(), secret, createDeviceDTO.getTelegramId());
+        String rawSecret = generateSecret();
+        device.setSecret(encryptionUtil.encrypt(rawSecret));
+        device.setRawSecret(rawSecret);
+
+        return device;
     }
 
     private String generateSecret(){
@@ -116,5 +122,11 @@ public class DeviceService {
         byte[] randomBytes = new byte[32];
         secureRandom.nextBytes(randomBytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+    }
+
+    @Transactional
+    public UUID remove(UUID deviceId) {
+        deviceRepository.deleteById(deviceId);
+        return deviceId;
     }
 }

@@ -1,7 +1,9 @@
 package com.example.greenhouse.services;
 
+import com.example.greenhouse.DTO.admin.AssignRoleToPersonDTO;
 import com.example.greenhouse.DTO.auth.AfterRegisterDataDTO;
 import com.example.greenhouse.DTO.auth.AuthenticationDTO;
+import com.example.greenhouse.DTO.user.UserInfoDTO;
 import com.example.greenhouse.exceptions.auth.UserAlreadyExistException;
 import com.example.greenhouse.models.user.User;
 import com.example.greenhouse.repositories.postgres.UserRepository;
@@ -17,6 +19,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -37,7 +41,7 @@ public class UserService implements CustomUserDetailsService {
             throw new UserAlreadyExistException("Пользователь с таким id уже существует");
         }
         User newUser = convertor.convertToUser(authenticationDTO);
-        newUser.setRole(Role.ROLE_USER);
+        newUser.setRole(Role.ROLE_UNKNOWN);
 
         newUser.setPassword(passwordEncoder.encode(authenticationDTO.getPassword()));
 
@@ -70,16 +74,21 @@ public class UserService implements CustomUserDetailsService {
     }
 
     @Transactional
-    public void updateRoleToAdmin(long id) {
+    public void setRoleOfUser(long id, AssignRoleToPersonDTO assignRoleToPersonDTO) {
         User user = userRepository.findByTelegramId(id)
                 .orElseThrow(()-> new EntityNotFoundException("User with id not found"));
 
-        user.setRole(Role.ROLE_ADMIN);
+        user.setRole(Role.valueOf(assignRoleToPersonDTO.getRole()));
         userRepository.save(user);
     }
 
     @Transactional
     public void remove(long id) {
         userRepository.deleteById(id);
+    }
+
+
+    public List<UserInfoDTO> findAllUsers() {
+        return convertor.convertToUserInfoDTO(userRepository.findAll());
     }
 }

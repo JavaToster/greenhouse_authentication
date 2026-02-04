@@ -1,20 +1,20 @@
 package com.example.greenhouse.models.device;
 
-import com.example.greenhouse.models.user.User;
+import com.example.greenhouse.models.clusters.Cluster;
 import com.example.greenhouse.util.enums.DeviceStatus;
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.ToString;
+import org.springframework.data.domain.Persistable;
 
 import java.util.UUID;
 
 @Data
 @Entity
 @Table(name = "devices")
-public class Device {
+public class Device implements Persistable<UUID> {
     @Id
-    @Column(name = "device_id", nullable = false)
-    private UUID deviceId;
+    @Column(name = "id", nullable = false)
+    private UUID id;
 
     @Column(name = "secret", nullable = false)
     private String secret;
@@ -24,6 +24,23 @@ public class Device {
     private DeviceStatus status;
 
     @ManyToOne
-    @JoinColumn(name = "owner_id", referencedColumnName = "telegram_id")
-    private User owner;
+    @JoinColumn(name = "cluster_id", referencedColumnName = "id")
+    private Cluster cluster;
+
+    @Transient
+    private String rawSecret;
+
+    @Transient
+    private boolean isNew = true;
+
+    @Override
+    public boolean isNew(){
+        return isNew;
+    }
+
+    @PostPersist
+    @PostLoad
+    void markNotNew(){
+        this.isNew = false;
+    }
 }
