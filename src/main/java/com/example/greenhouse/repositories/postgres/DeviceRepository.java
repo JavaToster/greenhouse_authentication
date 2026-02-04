@@ -20,4 +20,5 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
 """)
     int updateStatusByClusterId(UUID clusterId, DeviceStatus status);
 
+    long countByStatus(DeviceStatus status);
 }

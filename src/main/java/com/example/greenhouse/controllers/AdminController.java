@@ -1,8 +1,10 @@
 package com.example.greenhouse.controllers;
 
 import com.example.greenhouse.DTO.admin.AssignRoleToPersonDTO;
+import com.example.greenhouse.DTO.admin.SystemStatsForAdminDTO;
 import com.example.greenhouse.DTO.cluster.ClusterInfoDTO;
 import com.example.greenhouse.DTO.user.UserInfoDTO;
+import com.example.greenhouse.services.AdminService;
 import com.example.greenhouse.services.ClusterService;
 import com.example.greenhouse.services.DeviceService;
 import com.example.greenhouse.services.UserService;
@@ -22,6 +24,7 @@ public class AdminController {
     private final UserService userService;
     private final DeviceService deviceService;
     private final ClusterService clusterService;
+    private final AdminService adminService;
 
     @PatchMapping("/users/{telegramId}/role")
     @PreAuthorize("hasRole('ADMIN')")
@@ -55,5 +58,11 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UUID> removeDevice(@PathVariable("id") UUID deviceId){
         return ResponseEntity.ok(deviceService.remove(deviceId));
+    }
+
+    @GetMapping("/stats")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SystemStatsForAdminDTO> systemStats(){
+        return ResponseEntity.ok(adminService.getSystemStats());
     }
 }
