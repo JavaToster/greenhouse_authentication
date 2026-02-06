@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.List;
 
 @Component
@@ -24,7 +25,7 @@ public class Convertor {
         return modelMapper.map(authenticationDTO, User.class);
     }
 
-    public List<UserInfoDTO> convertToUserInfoDTO(List<User> all) {
+    public List<UserInfoDTO> convertToUserInfoDTO(Collection<? extends User> all) {
         return all.stream()
                 .map(this::convertToUserInfoDTO)
                 .toList();
@@ -55,6 +56,7 @@ public class Convertor {
 
         clusterInfoDTO.setOwner(convertToUserInfoDTO(cluster.getOwner()));
         clusterInfoDTO.setDevices(convertToDeviceInfoDTO(cluster.getDevices()));
+        clusterInfoDTO.setWorkers(convertToUserInfoDTO(cluster.getWorkers()));
 
         return clusterInfoDTO;
     }

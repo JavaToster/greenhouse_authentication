@@ -1,5 +1,6 @@
 package com.example.greenhouse.services;
 
+import com.example.greenhouse.DAO.user.UserDAO;
 import com.example.greenhouse.DTO.admin.AssignRoleToPersonDTO;
 import com.example.greenhouse.DTO.auth.AfterRegisterDataDTO;
 import com.example.greenhouse.DTO.auth.AuthenticationDTO;
@@ -26,18 +27,18 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserService implements CustomUserDetailsService {
-    private final UserRepository userRepository;
+    private final UserDAO userDAO;
     private final JwtUtil jwtUtil;
     private final Convertor convertor;
     private final PasswordEncoder passwordEncoder;
     @Override
     public User findUserByTelegramId(long telegramId) {
-        return userRepository.findByTelegramId(telegramId).orElseThrow(() -> new EntityNotFoundException("Пользователя с таким id не существует"));
+        return userDAO.find(telegramId);
     }
 
     @Transactional
     public AfterRegisterDataDTO singUp(AuthenticationDTO authenticationDTO){
-        if(userRepository.existsByTelegramId(authenticationDTO.getTelegramId())){
+        if(userDAO.exist(authenticationDTO.getTelegramId())){
             throw new UserAlreadyExistException("Пользователь с таким id уже существует");
         }
         User newUser = convertor.convertToUser(authenticationDTO);
@@ -45,15 +46,14 @@ public class UserService implements CustomUserDetailsService {
 
         newUser.setPassword(passwordEncoder.encode(authenticationDTO.getPassword()));
 
-        userRepository.save(newUser);
+        userDAO.save(newUser);
 
         String jwt = jwtUtil.generateToken(authenticationDTO.getTelegramId());
         return new AfterRegisterDataDTO(jwt);
     }
 
     public AfterRegisterDataDTO singIn(AuthenticationDTO authenticationDTO) {
-        User user = userRepository.findByTelegramId(authenticationDTO.getTelegramId())
-                .orElseThrow(() -> new BadCredentialsException("Неверный логин или пароль!"));
+        User user = userDAO.find(authenticationDTO.getTelegramId());
 
         if (!passwordEncoder.matches(authenticationDTO.getPassword(), user.getPassword())){
             throw new BadCredentialsException("Неверный логин или пароль!");
@@ -65,30 +65,26 @@ public class UserService implements CustomUserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        long telegramId = Long.valueOf(username);
-
-        User user = userRepository.findByTelegramId(telegramId)
-                .orElseThrow(() -> new UsernameNotFoundException("User with id not found"));
+        User user = userDAO.find(Long.parseLong(username));
 
         return new com.example.greenhouse.security.UserDetails(user);
     }
 
     @Transactional
     public void setRoleOfUser(long id, AssignRoleToPersonDTO assignRoleToPersonDTO) {
-        User user = userRepository.findByTelegramId(id)
-                .orElseThrow(()-> new EntityNotFoundException("User with id not found"));
+        User user = userDAO.find(id);
 
         user.setRole(Role.valueOf(assignRoleToPersonDTO.getRole()));
-        userRepository.save(user);
+        userDAO.save(user);
     }
 
     @Transactional
     public void remove(long id) {
-        userRepository.deleteById(id);
+        userDAO.remove(id);
     }
 
 
     public List<UserInfoDTO> findAllUsers() {
-        return convertor.convertToUserInfoDTO(userRepository.findAll());
+        return convertor.convertToUserInfoDTO(userDAO.findAll());
     }
 }

@@ -1,9 +1,9 @@
 package com.example.greenhouse.services;
 
+import com.example.greenhouse.DAO.device.DeviceDAO;
+import com.example.greenhouse.DAO.cluster.ClusterDAO;
+import com.example.greenhouse.DAO.user.UserDAO;
 import com.example.greenhouse.DTO.admin.SystemStatsForAdminDTO;
-import com.example.greenhouse.repositories.postgres.ClusterRepository;
-import com.example.greenhouse.repositories.postgres.DeviceRepository;
-import com.example.greenhouse.repositories.postgres.UserRepository;
 import com.example.greenhouse.util.enums.DeviceStatus;
 import com.example.greenhouse.util.enums.Role;
 import lombok.RequiredArgsConstructor;
@@ -15,21 +15,21 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AdminService {
-    private final UserRepository userRepository;
-    private final ClusterRepository clusterRepository;
-    private final DeviceRepository deviceRepository;
+    private final UserDAO userDAO;
+    private final ClusterDAO clusterDAO;
+    private final DeviceDAO deviceDAO;
 
     @Cacheable(value = "systemStats", key = "'global_admin_stats'")
     public SystemStatsForAdminDTO getSystemStats(){
         return SystemStatsForAdminDTO.builder()
-                .totalClusters(clusterRepository.count())
-                .totalDevices(deviceRepository.count())
-                .totalActiveDevices(deviceRepository.countByStatus(DeviceStatus.ACTIVE))
-                .totalUsers(userRepository.count())
-                .totalOwners(userRepository.countByRole(Role.ROLE_OWNER))
-                .totalInstallers(userRepository.countByRole(Role.ROLE_INSTALLER))
-                .totalWorkers(userRepository.countByRole(Role.ROLE_WORKER))
-                .totalUnknownUsers(userRepository.countByRole(Role.ROLE_UNKNOWN))
+                .totalClusters(clusterDAO.count())
+                .totalDevices(deviceDAO.count())
+                .totalActiveDevices(deviceDAO.count(DeviceStatus.ACTIVE))
+                .totalUsers(userDAO.count())
+                .totalOwners(userDAO.count(Role.ROLE_OWNER))
+                .totalInstallers(userDAO.count(Role.ROLE_INSTALLER))
+                .totalWorkers(userDAO.count(Role.ROLE_WORKER))
+                .totalUnknownUsers(userDAO.count(Role.ROLE_UNKNOWN))
                 .build();
     }
 }

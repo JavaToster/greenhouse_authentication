@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260205-1
+      author: TosterW
+      changes:
+        - createTable:
+            tableName: clusters_workers
+            columns:
+              - column:
+                  name: cluster_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_cw_cluster
+                    referencedTableName: clusters
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: worker_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_cw_worker
+                    referencedTableName: users
+                    referencedColumnNames: telegram_id
+                    deleteCascade: true
+
+        - addPrimaryKey:
+            tableName: clusters_workers
+            columnNames: cluster_id, worker_id
+            constraintName: pk_clusters_workers

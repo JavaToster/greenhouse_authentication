@@ -3,10 +3,11 @@ package com.example.greenhouse.exceptions;
 import com.example.greenhouse.DTO.error.ErrorResponseDTO;
 import com.example.greenhouse.exceptions.auth.UserAlreadyExistException;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.ValidationException;
+import org.apache.coyote.BadRequestException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -41,13 +42,27 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDTO> exceptionHandle(DataIntegrityViolationException exc){
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(new ErrorResponseDTO(HttpStatus.UNAUTHORIZED.value(), "Объект с такими данными уже существует!(Проверьте email или telegramId)"));
+                .body(new ErrorResponseDTO(HttpStatus.CONFLICT.value(), "Объект с такими данными уже существует!(Проверьте email или telegramId)"));
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponseDTO> exceptionHandle(EntityNotFoundException exc){
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponseDTO(HttpStatus.PERMANENT_REDIRECT.value(), exc.getMessage()));
+                .body(new ErrorResponseDTO(HttpStatus.NOT_FOUND.value(), exc.getMessage()));
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponseDTO> exceptionHandle(BadRequestException exc){
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponseDTO(HttpStatus.BAD_REQUEST.value(), exc.getMessage()));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponseDTO> exceptionHandle(AccessDeniedException exc){
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponseDTO(HttpStatus.BAD_REQUEST.value(), exc.getMessage()));
     }
 }

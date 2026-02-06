@@ -28,10 +28,10 @@ public class InstallerController {
         return ResponseEntity.ok(devicesTempSecretDTO);
     }
 
-    @GetMapping("/devices/secrets/{cluster_id}")
+    @GetMapping("/devices/secrets/{token}")
     @PreAuthorize("hasAnyRole('INSTALLER', 'ADMIN')")
-    public ResponseEntity<List<ClusterDevicesTempSecretsDTO>> getSecrets(@PathVariable("cluster_id") UUID clusterId){
-        List<ClusterDevicesTempSecretsDTO> secrets = clusterService.getRawKeysAndActivate(clusterId);
+    public ResponseEntity<List<ClusterDevicesTempSecretsDTO>> getSecrets(@PathVariable("token") UUID token){
+        List<ClusterDevicesTempSecretsDTO> secrets = clusterService.getRawKeysAndActivate(token);
         return ResponseEntity.ok(secrets);
     }
 }

@@ -18,7 +18,7 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
     set d.status = :status
     where d.cluster.id = :clusterId
 """)
-    int updateStatusByClusterId(UUID clusterId, DeviceStatus status);
+    void updateStatusByClusterId(UUID clusterId, DeviceStatus status);
 
     long countByStatus(DeviceStatus status);
 }

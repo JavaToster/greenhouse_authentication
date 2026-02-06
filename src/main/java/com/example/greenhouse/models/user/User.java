@@ -5,15 +5,23 @@ import com.example.greenhouse.models.device.Device;
 import com.example.greenhouse.util.enums.Role;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "users")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true) // Говорим использовать только помеченные поля
 public class User {
     @Id
     @Column(name = "telegram_id")
+    @EqualsAndHashCode.Include
     private long telegramId;
 
     @Column(name = "email")
@@ -28,4 +36,6 @@ public class User {
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     private List<Cluster> clusters ;
 
+    @ManyToMany(mappedBy = "workers")
+    private Set<Cluster> clustersToWork = new HashSet<>();
 }

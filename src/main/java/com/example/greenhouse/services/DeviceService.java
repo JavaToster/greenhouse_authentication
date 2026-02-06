@@ -1,21 +1,15 @@
 package com.example.greenhouse.services;
 
+import com.example.greenhouse.DAO.device.DeviceDAO;
 import com.example.greenhouse.DTO.auth.DeviceAuthRequestDTO;
-import com.example.greenhouse.DTO.device.CreateDeviceDTO;
-import com.example.greenhouse.DTO.device.CreatedDeviceDTO;
 import com.example.greenhouse.models.clusters.Cluster;
 import com.example.greenhouse.models.device.Device;
-import com.example.greenhouse.models.user.User;
-import com.example.greenhouse.repositories.postgres.DeviceRepository;
-import com.example.greenhouse.repositories.postgres.UserRepository;
 import com.example.greenhouse.repositories.redis.RedisRepository;
 import com.example.greenhouse.security.EncryptionUtil;
 import com.example.greenhouse.security.JwtUtil;
 import com.example.greenhouse.util.enums.DeviceStatus;
 import com.example.greenhouse.util.redis.RedisKeyCreator;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +30,7 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class DeviceService {
-    private final DeviceRepository deviceRepository;
+    private final DeviceDAO deviceDAO;
     private final JwtUtil jwtUtil;
     private static final long CHALLENGE_TTL_IN_SECONDS = 30;
     private final RedisRepository redisRepository;
@@ -52,8 +46,7 @@ public class DeviceService {
     }
 
     public String verify(DeviceAuthRequestDTO deviceAuthRequestDTO){
-        Device device = deviceRepository.findById(deviceAuthRequestDTO.getDeviceId())
-                .orElseThrow(() -> new BadCredentialsException("Unknown device"));
+        Device device = deviceDAO.find(deviceAuthRequestDTO.getDeviceId());
 
         String issuedChallenge = redisRepository.findByKey(redisKeyCreator.createChallengeKey(deviceAuthRequestDTO.getDeviceId().toString()), String.class);
 
@@ -126,7 +119,7 @@ public class DeviceService {
 
     @Transactional
     public UUID remove(UUID deviceId) {
-        deviceRepository.deleteById(deviceId);
+        deviceDAO.remove(deviceId);
         return deviceId;
     }
 }

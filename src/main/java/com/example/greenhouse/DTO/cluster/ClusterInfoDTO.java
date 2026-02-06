@@ -14,4 +14,5 @@ public class ClusterInfoDTO {
     private String description;
     private UserInfoDTO owner;
     private List<DeviceInfoDTO> devices;
+    private List<UserInfoDTO> workers;
 }
