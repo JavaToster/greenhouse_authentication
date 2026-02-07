@@ -10,6 +10,7 @@ import com.example.greenhouse.security.JwtUtil;
 import com.example.greenhouse.util.enums.DeviceStatus;
 import com.example.greenhouse.util.redis.RedisKeyCreator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -38,6 +40,7 @@ public class DeviceService {
     private final EncryptionUtil encryptionUtil;
 
     public String generateChallenge(String deviceId) {
+        log.debug("Generating challenge for device {}", deviceId);
         String challenge = UUID.randomUUID().toString();
 
         redisRepository.saveWithTTLInSeconds(redisKeyCreator.createChallengeKey(deviceId), challenge, CHALLENGE_TTL_IN_SECONDS);
@@ -46,21 +49,26 @@ public class DeviceService {
     }
 
     public String verify(DeviceAuthRequestDTO deviceAuthRequestDTO){
-        Device device = deviceDAO.find(deviceAuthRequestDTO.getDeviceId());
+        log.info("Authentication attempt for device {}", deviceAuthRequestDTO.getDeviceId());
+        Device device = deviceDAO.findById(deviceAuthRequestDTO.getDeviceId());
 
         String issuedChallenge = redisRepository.findByKey(redisKeyCreator.createChallengeKey(deviceAuthRequestDTO.getDeviceId().toString()), String.class);
 
         if(issuedChallenge == null){
+            log.warn("Security alert: Challenge not found or expired");
             throw new BadCredentialsException("No challenge issued or expired");
         }
 
         if(!issuedChallenge.equals(deviceAuthRequestDTO.getChallenge())){
+            log.warn("Security alert: Challenge mismatch, possible breach attempt");
             throw new BadCredentialsException("Challenge mismatch");
         }
 
         validateSignature(deviceAuthRequestDTO.getSignature(), issuedChallenge, encryptionUtil.decrypt(device.getSecret()));
 
         redisRepository.remove(redisKeyCreator.createChallengeKey(deviceAuthRequestDTO.getDeviceId().toString()));
+
+        log.info("Successful authentication for device {}", device.getId());
 
         return jwtUtil.generateToken(device.getCluster().getOwner().getTelegramId());
     }
@@ -70,6 +78,7 @@ public class DeviceService {
 
         if(!MessageDigest.isEqual(expected.getBytes(StandardCharsets.UTF_8),
                 clientSig.getBytes(StandardCharsets.UTF_8))){
+            log.warn("Security alert: Invalid signature, possible breach attempt");
             throw new BadCredentialsException("Invalid signature");
         }
     }
@@ -97,6 +106,7 @@ public class DeviceService {
     }
 
     public Device createNewDevice(Cluster cluster) {
+        log.info("Creating new device for cluster {}", cluster.getId());
         Device device = new Device();
 
         device.setId(UUID.randomUUID());
@@ -119,6 +129,7 @@ public class DeviceService {
 
     @Transactional
     public UUID remove(UUID deviceId) {
+        log.info("Removing device {}", deviceId);
         deviceDAO.remove(deviceId);
         return deviceId;
     }

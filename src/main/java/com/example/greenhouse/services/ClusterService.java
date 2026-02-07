@@ -17,6 +17,7 @@ import com.example.greenhouse.util.enums.DeviceStatus;
 import com.example.greenhouse.util.enums.Role;
 import com.example.greenhouse.util.redis.RedisKeyCreator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ import org.springframework.security.access.AccessDeniedException;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ClusterService {
@@ -40,6 +42,7 @@ public class ClusterService {
 
     @Transactional
     public DevicesTempSecretDTO registerNewCluster(RegisterNewClusterDTO registerNewClusterDTO) {
+        log.info("Starting new cluster registration with name '{}' for owner {}", registerNewClusterDTO.getName(), registerNewClusterDTO.getOwnerId());
         User user = userDAO.find(registerNewClusterDTO.getOwnerId());
 
         Cluster cluster = new Cluster();
@@ -59,6 +62,8 @@ public class ClusterService {
         UUID secretsToken = UUID.randomUUID();
         redisRepository.saveWithTTLInMinutes(redisKeyCreator.createClusterDevicesTempSecretsKey(secretsToken), new DevicesSecretWrapper(cluster.getId(), tempSecrets), CLUSTER_DEVICES_TEMP_SECRETS_TTL_IN_MINUTES);
 
+        log.info("Cluster {} with name {} successfully registered. Device count: {}. Owner: {}", cluster.getId(), cluster.getName(), cluster.getDevices().size(), cluster.getOwner().getTelegramId());
+
         return new DevicesTempSecretDTO(cluster.getId().toString(), secretsToken.toString());
     }
 
@@ -70,15 +75,19 @@ public class ClusterService {
 
     @Transactional
     public List<ClusterDevicesTempSecretsDTO> getRawKeysAndActivate(UUID token) {
+        log.info("Attempting to activate devices using token {}", token);
         DevicesSecretWrapper wrapper = redisRepository.findByKey(redisKeyCreator.createClusterDevicesTempSecretsKey(token), DevicesSecretWrapper.class);
 
         if (wrapper == null || wrapper.getSecrets() == null) {
-            throw new org.springframework.security.access.AccessDeniedException("Секреты не найдены или уже были активированы.");
+            log.warn("Device activation error: token {} does not exist or has expired", token);
+            throw new org.springframework.security.access.AccessDeniedException("Secrets not found or already activated.");
         }
 
         redisRepository.remove(redisKeyCreator.createClusterDevicesTempSecretsKey(token));
 
         deviceDAO.updateStatusByClusterId(wrapper.getClusterId(), DeviceStatus.ACTIVE);
+
+        log.info("Devices for cluster {} successfully activated", wrapper.getClusterId());
 
         return wrapper.getSecrets();
     }
@@ -86,46 +95,67 @@ public class ClusterService {
     public List<ClusterInfoDTO> findByOwnerId(long telegramId) {
         User user = userDAO.find(telegramId);
 
-        List<Cluster> clusters = clusterDAO.find(user);
+        List<Cluster> clusters = clusterDAO.findByOwner(user);
         return convertor.convertToClusterInfoDTO(clusters);
     }
 
     @Transactional
     public void addWorkerToCluster(long ownerId, UUID clusterId, long workerId) throws BadRequestException, AccessDeniedException {
-        Cluster cluster = clusterDAO.find(clusterId);
+        log.info("Attempting to add worker {} to cluster {}", workerId, clusterId);
 
-        if (cluster.getOwner().getTelegramId() != ownerId){
-            throw new AccessDeniedException("Пользователь не является хозяином этого кластера");
-        }
+        Cluster cluster = clusterDAO.findById(clusterId);
+
+        checkOwner(cluster, ownerId);
 
         User worker = userDAO.find(workerId);
 
-        if (worker.getRole() == null || worker.getRole() != Role.ROLE_WORKER){
-            throw new BadRequestException("Пользователь не является работником!");
+        isWorker(worker);
+
+        if (cluster.getWorkers().contains(worker)) {
+            log.warn("User {} is already a worker in cluster {}", workerId, clusterId);
+            throw new BadRequestException("User is already a worker in this cluster");
         }
 
-        if (!cluster.getWorkers().contains(worker)){
-            cluster.addWorker(worker);
-        }
-
+        cluster.addWorker(worker);
         clusterDAO.save(cluster);
+
+        log.info("Worker {} successfully added to cluster {}", workerId, clusterId);
     }
 
     public void removeWorkerFromCluster(long ownerId, UUID clusterId, long workerId) throws AccessDeniedException, BadRequestException {
-        Cluster cluster = clusterDAO.find(clusterId);
+        log.info("Attempting to remove worker {} from cluster {} by owner {}", workerId, clusterId, ownerId);
+        Cluster cluster = clusterDAO.findById(clusterId);
 
-        if (cluster.getOwner().getTelegramId() != ownerId){
-            throw new AccessDeniedException("Пользователь не является хозяином этого кластера");
-        }
+        checkOwner(cluster, ownerId);
 
         User worker = userDAO.find(workerId);
 
-        if (!cluster.getWorkers().contains(worker)){
-            throw new BadRequestException("Этот пользователь не привязан к данному кластеру");
+        isWorker(worker);
+
+        if (!cluster.getWorkers().contains(worker)) {
+            log.warn("User {} is not a worker in cluster {}", workerId, clusterId);
+            throw new BadRequestException("User is not a worker in this cluster");
         }
-
         cluster.removeWorker(worker);
-
         clusterDAO.save(cluster);
+        log.info("Worker {} successfully removed from cluster {}", workerId, clusterId);
+    }
+
+    public List<ClusterInfoDTO> findByWorker(long workerId) {
+        return convertor.convertToClusterInfoDTO(clusterDAO.findByWorker(workerId));
+    }
+
+    private void checkOwner(Cluster cluster, long ownerId){
+        if(cluster.getOwner().getTelegramId() != ownerId){
+            log.warn("Security alert: User {} is not the owner of cluster {}", ownerId, cluster.getId());
+            throw new AccessDeniedException("User is not the owner of this cluster");
+        }
+    }
+
+    private void isWorker(User worker) throws BadRequestException {
+        if (worker.getRole() != Role.ROLE_WORKER){
+            log.warn("User {} does not have the WORKER role", worker.getTelegramId());
+            throw new BadRequestException("User is not a worker");
+        }
     }
 }
