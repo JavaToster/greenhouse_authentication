@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
@@ -40,7 +43,7 @@ public class AuthController {
     }
 
     @PostMapping("/device/verify")
-    public ResponseEntity<SuccessfullyAuthenticatedDTO> verify(@RequestBody DeviceAuthRequestDTO deviceAuthRequestDTO){
+    public ResponseEntity<SuccessfullyAuthenticatedDTO> verify(@RequestBody DeviceAuthRequestDTO deviceAuthRequestDTO) throws NoSuchAlgorithmException, InvalidKeyException {
         String token = deviceService.verify(deviceAuthRequestDTO);
         return ResponseEntity.ok(new SuccessfullyAuthenticatedDTO(token));
     }

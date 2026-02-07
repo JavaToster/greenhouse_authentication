@@ -42,9 +42,7 @@ public class DeviceService {
     public String generateChallenge(String deviceId) {
         log.debug("Generating challenge for device {}", deviceId);
         String challenge = UUID.randomUUID().toString();
-
         redisRepository.saveWithTTLInSeconds(redisKeyCreator.createChallengeKey(deviceId), challenge, CHALLENGE_TTL_IN_SECONDS);
-
         return challenge;
     }
 
@@ -55,30 +53,25 @@ public class DeviceService {
         String issuedChallenge = redisRepository.findByKey(redisKeyCreator.createChallengeKey(deviceAuthRequestDTO.getDeviceId().toString()), String.class);
 
         if(issuedChallenge == null){
-            log.warn("Security alert: Challenge not found or expired");
             throw new BadCredentialsException("No challenge issued or expired");
         }
 
         if(!issuedChallenge.equals(deviceAuthRequestDTO.getChallenge())){
-            log.warn("Security alert: Challenge mismatch, possible breach attempt");
             throw new BadCredentialsException("Challenge mismatch");
         }
 
         validateSignature(deviceAuthRequestDTO.getSignature(), issuedChallenge, encryptionUtil.decrypt(device.getSecret()));
 
         redisRepository.remove(redisKeyCreator.createChallengeKey(deviceAuthRequestDTO.getDeviceId().toString()));
-
-        log.info("Successful authentication for device {}", device.getId());
+        log.info("Device {} successfully authenticated", device.getId());
 
         return jwtUtil.generateToken(device.getCluster().getOwner().getTelegramId());
     }
 
     private void validateSignature(String clientSig, String data, String secret){
         String expected = hmacSha256(data, secret);
-
         if(!MessageDigest.isEqual(expected.getBytes(StandardCharsets.UTF_8),
                 clientSig.getBytes(StandardCharsets.UTF_8))){
-            log.warn("Security alert: Invalid signature, possible breach attempt");
             throw new BadCredentialsException("Invalid signature");
         }
     }
@@ -86,13 +79,9 @@ public class DeviceService {
     private String hmacSha256(String data, String secret){
         try{
             Mac mac = Mac.getInstance("HmacSHA256");
-
             SecretKeySpec key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-
             mac.init(key);
-
             byte[] rawHmac = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-
             return Base64.getEncoder().encodeToString(rawHmac);
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new RuntimeException(e);
@@ -100,15 +89,14 @@ public class DeviceService {
     }
 
     public List<Device> createNewDevices(Cluster cluster, int count){
+        log.info("Creating {} new devices for cluster {}", count, cluster.getId());
         return IntStream.range(0, count)
                 .mapToObj(i -> createNewDevice(cluster))
                 .toList();
     }
 
     public Device createNewDevice(Cluster cluster) {
-        log.info("Creating new device for cluster {}", cluster.getId());
         Device device = new Device();
-
         device.setId(UUID.randomUUID());
         device.setCluster(cluster);
         device.setStatus(DeviceStatus.PENDING_ACTIVAT);

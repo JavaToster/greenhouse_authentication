@@ -3,6 +3,7 @@ package com.example.greenhouse.exceptions;
 import com.example.greenhouse.DTO.error.ErrorResponseDTO;
 import com.example.greenhouse.exceptions.auth.UserAlreadyExistException;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -13,56 +14,63 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.util.Date;
-
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
     @ExceptionHandler(UserAlreadyExistException.class)
     public ResponseEntity<ErrorResponseDTO> exceptionHandle(UserAlreadyExistException exc){
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
+        log.warn("Signup conflict: {}", exc.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorResponseDTO(HttpStatus.CONFLICT.value(), exc.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDTO> exceptionHandle(MethodArgumentNotValidException exc){
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+        log.warn("Validation error: {}", exc.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponseDTO(HttpStatus.BAD_REQUEST.value(), exc.getMessage()));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponseDTO> exceptionHandle(BadCredentialsException exc){
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
+        log.warn("Authentication failed: {}", exc.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ErrorResponseDTO(HttpStatus.UNAUTHORIZED.value(), exc.getMessage()));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponseDTO> exceptionHandle(DataIntegrityViolationException exc){
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(new ErrorResponseDTO(HttpStatus.CONFLICT.value(), "Объект с такими данными уже существует!(Проверьте email или telegramId)"));
+        log.error("Data integrity violation: ", exc);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponseDTO(HttpStatus.CONFLICT.value(), "Object already exists (check unique fields)"));
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponseDTO> exceptionHandle(EntityNotFoundException exc){
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
+        log.warn("Entity not found: {}", exc.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponseDTO(HttpStatus.NOT_FOUND.value(), exc.getMessage()));
     }
 
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponseDTO> exceptionHandle(BadRequestException exc){
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+        log.warn("Bad request: {}", exc.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponseDTO(HttpStatus.BAD_REQUEST.value(), exc.getMessage()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponseDTO> exceptionHandle(AccessDeniedException exc){
-        return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body(new ErrorResponseDTO(HttpStatus.BAD_REQUEST.value(), exc.getMessage()));
+        log.warn("Security alert - Access denied: {}", exc.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponseDTO(HttpStatus.FORBIDDEN.value(), exc.getMessage()));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponseDTO> handleGlobal(Exception exc){
+        log.error("Internal server error: ", exc);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponseDTO(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal server error"));
     }
 }

@@ -19,7 +19,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Slf4j
@@ -38,70 +37,53 @@ public class UserService implements CustomUserDetailsService {
     }
 
     @Transactional
-    public AfterRegisterDataDTO singUp(AuthenticationDTO authenticationDTO) {
-        log.info("Attempting to register new user with Telegram ID: {}", authenticationDTO.getTelegramId());
-
-        if (userDAO.exist(authenticationDTO.getTelegramId())) {
-            log.warn("Registration failed: User with ID {} already exists", authenticationDTO.getTelegramId());
-            throw new UserAlreadyExistException("Пользователь с таким id уже существует");
+    public AfterRegisterDataDTO singUp(AuthenticationDTO authenticationDTO){
+        log.info("Attempting signup for user {}", authenticationDTO.getTelegramId());
+        if(userDAO.exist(authenticationDTO.getTelegramId())){
+            throw new UserAlreadyExistException("User already exists");
         }
-
         User newUser = convertor.convertToUser(authenticationDTO);
         newUser.setRole(Role.ROLE_UNKNOWN);
         newUser.setPassword(passwordEncoder.encode(authenticationDTO.getPassword()));
-
         userDAO.save(newUser);
-        log.info("User {} successfully registered with role {}", newUser.getTelegramId(), newUser.getRole());
+        log.info("User {} registered successfully", newUser.getTelegramId());
 
-        String jwt = jwtUtil.generateToken(authenticationDTO.getTelegramId());
-        return new AfterRegisterDataDTO(jwt);
+        return new AfterRegisterDataDTO(jwtUtil.generateToken(authenticationDTO.getTelegramId()));
     }
 
     public AfterRegisterDataDTO singIn(AuthenticationDTO authenticationDTO) {
-        log.info("Login attempt for user {}", authenticationDTO.getTelegramId());
-
+        log.info("Sign-in attempt for user {}", authenticationDTO.getTelegramId());
         User user = userDAO.find(authenticationDTO.getTelegramId());
 
-        if (!passwordEncoder.matches(authenticationDTO.getPassword(), user.getPassword())) {
-            log.warn("Login failed for user {}: Invalid credentials", authenticationDTO.getTelegramId());
-            throw new BadCredentialsException("Неверный логин или пароль!");
+        if (!passwordEncoder.matches(authenticationDTO.getPassword(), user.getPassword())){
+            throw new BadCredentialsException("Invalid login or password");
         }
 
-        log.info("User {} successfully authenticated", authenticationDTO.getTelegramId());
-        String jwt = jwtUtil.generateToken(authenticationDTO.getTelegramId());
-        return new AfterRegisterDataDTO(jwt);
+        log.info("User {} signed in successfully", user.getTelegramId());
+        return new AfterRegisterDataDTO(jwtUtil.generateToken(authenticationDTO.getTelegramId()));
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        log.debug("Loading user details for Spring Security by username: {}", username);
         User user = userDAO.find(Long.parseLong(username));
-
         return new com.example.greenhouse.security.UserDetails(user);
     }
 
     @Transactional
     public void setRoleOfUser(long id, AssignRoleToPersonDTO assignRoleToPersonDTO) {
-        log.info("Admin action: Changing role of user {} to {}", id, assignRoleToPersonDTO.getRole());
-
+        log.info("Updating role for user {} to {}", id, assignRoleToPersonDTO.getRole());
         User user = userDAO.find(id);
-        Role newRole = Role.valueOf(assignRoleToPersonDTO.getRole());
-
-        user.setRole(newRole);
+        user.setRole(Role.valueOf(assignRoleToPersonDTO.getRole()));
         userDAO.save(user);
-
-        log.info("Role for user {} successfully updated to {}", id, newRole);
     }
 
     @Transactional
     public void remove(long id) {
-        log.info("Removing user with ID: {}", id);
+        log.info("Removing user {}", id);
         userDAO.remove(id);
-        log.info("User {} successfully removed", id);
     }
 
     public List<UserInfoDTO> findAllUsers() {
-        log.debug("Fetching all users from database");
         return convertor.convertToUserInfoDTO(userDAO.findAll());
     }
 }
