@@ -31,7 +31,7 @@ public class DeviceDAO {
         deviceRepository.updateStatusByClusterId(clusterId, status);
     }
 
-    public Device find(UUID id){
+    public Device findById(UUID id){
         return deviceRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Девайса с таким id не существует"));
     }

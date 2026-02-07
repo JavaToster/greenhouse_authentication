@@ -11,4 +11,6 @@ import java.util.UUID;
 @Repository
 public interface ClusterRepository extends JpaRepository<Cluster, UUID> {
     List<Cluster> findByOwner(User owner);
+
+    List<Cluster> findByWorkersTelegramId(long workerId);
 }

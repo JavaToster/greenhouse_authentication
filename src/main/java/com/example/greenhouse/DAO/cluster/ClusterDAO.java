@@ -27,12 +27,16 @@ public class ClusterDAO {
         return clusterRepository.findAll();
     }
 
-    public List<Cluster> find(User owner){
+    public List<Cluster> findByOwner(User owner){
         return clusterRepository.findByOwner(owner);
     }
 
-    public Cluster find(UUID id){
+    public Cluster findById(UUID id){
         return clusterRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Кластера с таким id не существует"));
+    }
+
+    public List<Cluster> findByWorker(long workerId){
+        return clusterRepository.findByWorkersTelegramId(workerId);
     }
 }
