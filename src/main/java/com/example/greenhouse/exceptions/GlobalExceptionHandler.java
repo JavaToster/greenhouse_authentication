@@ -8,6 +8,7 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -48,7 +49,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponseDTO> exceptionHandle(EntityNotFoundException exc){
-        log.warn("Entity not found: {}", exc.getMessage());
+        log.warn("Entity with id not found");
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponseDTO(HttpStatus.NOT_FOUND.value(), exc.getMessage()));
     }
@@ -67,10 +68,17 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponseDTO(HttpStatus.FORBIDDEN.value(), exc.getMessage()));
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponseDTO> exceptionHandle(HttpMessageNotReadableException exc){
+        log.warn("Request missing");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponseDTO(HttpStatus.BAD_REQUEST.value(), "Request body is missing"));
+    }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleGlobal(Exception exc){
         log.error("Internal server error: ", exc);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponseDTO(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal server error"));
     }
+
 }

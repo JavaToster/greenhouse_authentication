@@ -21,7 +21,7 @@ public class InstallerController {
 
     private final ClusterService clusterService;
 
-    @PutMapping("/clusters/new")
+    @PostMapping("/clusters/new")
     @PreAuthorize("hasAnyRole('INSTALLER', 'ADMIN')")
     public ResponseEntity<DevicesTempSecretDTO> registerNewCluster(@Valid @RequestBody RegisterNewClusterDTO registerNewClusterDTO){
         DevicesTempSecretDTO devicesTempSecretDTO = clusterService.registerNewCluster(registerNewClusterDTO);

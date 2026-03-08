@@ -1,6 +1,6 @@
-package com.example.greenhouse.DAO.device;
+package com.example.greenhouse.store;
 
-import com.example.greenhouse.models.device.Device;
+import com.example.greenhouse.models.Device;
 import com.example.greenhouse.repositories.postgres.DeviceRepository;
 import com.example.greenhouse.util.enums.DeviceStatus;
 import jakarta.persistence.EntityNotFoundException;
@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class DeviceDAO {
+public class DeviceStore implements GenericStore<Device, UUID> {
     private final DeviceRepository deviceRepository;
 
     public long count(){
@@ -34,6 +34,11 @@ public class DeviceDAO {
     public Device findById(UUID id){
         return deviceRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Девайса с таким id не существует"));
+    }
+
+    @Override
+    public Device save(Device device) {
+        return deviceRepository.save(device);
     }
 
     public void remove(UUID id){

@@ -1,7 +1,7 @@
-package com.example.greenhouse.DAO.cluster;
+package com.example.greenhouse.store;
 
-import com.example.greenhouse.models.clusters.Cluster;
-import com.example.greenhouse.models.user.User;
+import com.example.greenhouse.models.Cluster;
+import com.example.greenhouse.models.User;
 import com.example.greenhouse.repositories.postgres.ClusterRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -12,13 +12,14 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class ClusterDAO {
+public class ClusterStore implements GenericStore<Cluster, UUID> {
     private final ClusterRepository clusterRepository;
 
     public long count(){
         return clusterRepository.count();
     }
 
+    @Override
     public Cluster save(Cluster cluster){
         return clusterRepository.save(cluster);
     }
@@ -31,6 +32,7 @@ public class ClusterDAO {
         return clusterRepository.findByOwner(owner);
     }
 
+    @Override
     public Cluster findById(UUID id){
         return clusterRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Кластера с таким id не существует"));

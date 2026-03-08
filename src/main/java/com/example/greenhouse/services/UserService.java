@@ -1,18 +1,21 @@
 package com.example.greenhouse.services;
 
-import com.example.greenhouse.DAO.user.UserDAO;
+import com.example.greenhouse.DTO.auth.SingInDTO;
+import com.example.greenhouse.exceptions.logic.DataConflictException;
+import com.example.greenhouse.store.UserStore;
 import com.example.greenhouse.DTO.admin.AssignRoleToPersonDTO;
 import com.example.greenhouse.DTO.auth.AfterRegisterDataDTO;
-import com.example.greenhouse.DTO.auth.AuthenticationDTO;
+import com.example.greenhouse.DTO.auth.SingUpDTO;
 import com.example.greenhouse.DTO.user.UserInfoDTO;
 import com.example.greenhouse.exceptions.auth.UserAlreadyExistException;
-import com.example.greenhouse.models.user.User;
+import com.example.greenhouse.models.User;
 import com.example.greenhouse.security.CustomUserDetailsService;
 import com.example.greenhouse.security.JwtUtil;
 import com.example.greenhouse.util.Convertor;
 import com.example.greenhouse.util.enums.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,20 +29,20 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserService implements CustomUserDetailsService {
-    private final UserDAO userDAO;
+    private final UserStore userDAO;
     private final JwtUtil jwtUtil;
     private final Convertor convertor;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public User findUserByTelegramId(long telegramId) {
-        return userDAO.find(telegramId);
+        return userDAO.findById(telegramId);
     }
 
     @Transactional
-    public AfterRegisterDataDTO singUp(AuthenticationDTO authenticationDTO){
+    public AfterRegisterDataDTO singUp(SingUpDTO authenticationDTO){
         log.info("Attempting signup for user {}", authenticationDTO.getTelegramId());
-        if(userDAO.exist(authenticationDTO.getTelegramId())){
+        if(userDAO.exist(authenticationDTO.getTelegramId(), authenticationDTO.getEmail())){
             throw new UserAlreadyExistException("User already exists");
         }
         User newUser = convertor.convertToUser(authenticationDTO);
@@ -51,9 +54,9 @@ public class UserService implements CustomUserDetailsService {
         return new AfterRegisterDataDTO(jwtUtil.generateToken(authenticationDTO.getTelegramId()));
     }
 
-    public AfterRegisterDataDTO singIn(AuthenticationDTO authenticationDTO) {
+    public AfterRegisterDataDTO singIn(SingInDTO authenticationDTO) {
         log.info("Sign-in attempt for user {}", authenticationDTO.getTelegramId());
-        User user = userDAO.find(authenticationDTO.getTelegramId());
+        User user = userDAO.findById(authenticationDTO.getTelegramId());
 
         if (!passwordEncoder.matches(authenticationDTO.getPassword(), user.getPassword())){
             throw new BadCredentialsException("Invalid login or password");
@@ -65,14 +68,14 @@ public class UserService implements CustomUserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userDAO.find(Long.parseLong(username));
+        User user = userDAO.findById(Long.parseLong(username));
         return new com.example.greenhouse.security.UserDetails(user);
     }
 
     @Transactional
     public void setRoleOfUser(long id, AssignRoleToPersonDTO assignRoleToPersonDTO) {
         log.info("Updating role for user {} to {}", id, assignRoleToPersonDTO.getRole());
-        User user = userDAO.find(id);
+        User user = userDAO.findById(id);
         user.setRole(Role.valueOf(assignRoleToPersonDTO.getRole()));
         userDAO.save(user);
     }

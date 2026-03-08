@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260210-1
+      author: TosterW
+      changes:
+        - createTable:
+            tableName: tasks
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_tasks
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: varchar(255)
+
+              - column:
+                  name: description
+                  type: varchar(500)
+
+              - column:
+                  name: cluster_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_tasks_cluster
+                    referencedTableName: clusters
+                    referencedColumnNames: id
+                    deleteCascade: true
+
+              - column:
+                  name: deadline
+                  type: timestamp
+
+              - column:
+                  name: status
+                  type: varchar(50)

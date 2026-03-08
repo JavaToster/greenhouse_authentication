@@ -1,9 +1,6 @@
 package com.example.greenhouse.controllers;
 
-import com.example.greenhouse.DTO.auth.AfterRegisterDataDTO;
-import com.example.greenhouse.DTO.auth.AuthenticationDTO;
-import com.example.greenhouse.DTO.auth.DeviceAuthRequestDTO;
-import com.example.greenhouse.DTO.auth.SuccessfullyAuthenticatedDTO;
+import com.example.greenhouse.DTO.auth.*;
 import com.example.greenhouse.services.DeviceService;
 import com.example.greenhouse.services.UserService;
 import jakarta.validation.Valid;
@@ -23,14 +20,14 @@ public class AuthController {
     private final DeviceService deviceService;
 
     @PostMapping("/sing-up")
-    public ResponseEntity<AfterRegisterDataDTO> singUp(@Valid @RequestBody AuthenticationDTO authenticationDTO){
+    public ResponseEntity<AfterRegisterDataDTO> singUp(@Valid @RequestBody SingUpDTO authenticationDTO){
         AfterRegisterDataDTO afterRegisterDataDTO = userService.singUp(authenticationDTO);
 
         return ResponseEntity.ok(afterRegisterDataDTO);
     }
 
     @PostMapping("/sing-in")
-    public ResponseEntity<AfterRegisterDataDTO> singIn(@Valid @RequestBody AuthenticationDTO authenticationDTO){
+    public ResponseEntity<AfterRegisterDataDTO> singIn(@Valid @RequestBody SingInDTO authenticationDTO){
         AfterRegisterDataDTO afterRegisterDataDTO = userService.singIn(authenticationDTO);
 
         return ResponseEntity.ok(afterRegisterDataDTO);

@@ -1,14 +1,14 @@
 package com.example.greenhouse.util;
 
-import com.example.greenhouse.DTO.auth.AuthenticationDTO;
+import com.example.greenhouse.DTO.auth.SingUpDTO;
 import com.example.greenhouse.DTO.cluster.ClusterInfoDTO;
-import com.example.greenhouse.DTO.cluster.RegisteredClusterDTO;
-import com.example.greenhouse.DTO.device.CreatedDeviceDTO;
 import com.example.greenhouse.DTO.device.DeviceInfoDTO;
+import com.example.greenhouse.DTO.task.TaskInfoDTO;
 import com.example.greenhouse.DTO.user.UserInfoDTO;
-import com.example.greenhouse.models.clusters.Cluster;
-import com.example.greenhouse.models.device.Device;
-import com.example.greenhouse.models.user.User;
+import com.example.greenhouse.models.Cluster;
+import com.example.greenhouse.models.Device;
+import com.example.greenhouse.models.Task;
+import com.example.greenhouse.models.User;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
@@ -21,7 +21,7 @@ import java.util.List;
 public class Convertor {
     private final ModelMapper modelMapper;
 
-    public User convertToUser(AuthenticationDTO authenticationDTO){
+    public User convertToUser(SingUpDTO authenticationDTO){
         return modelMapper.map(authenticationDTO, User.class);
     }
 
@@ -59,5 +59,15 @@ public class Convertor {
         clusterInfoDTO.setWorkers(convertToUserInfoDTO(cluster.getWorkers()));
 
         return clusterInfoDTO;
+    }
+
+    public List<TaskInfoDTO> convertToTaskInfoDTO(List<Task> tasks){
+        return tasks.stream()
+                .map(this::convertToTaskInfoDTO)
+                .toList();
+    }
+
+    public TaskInfoDTO convertToTaskInfoDTO(Task task) {
+        return modelMapper.map(task, TaskInfoDTO.class);
     }
 }

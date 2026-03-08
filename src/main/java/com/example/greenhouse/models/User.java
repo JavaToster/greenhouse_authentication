@@ -1,10 +1,7 @@
-package com.example.greenhouse.models.user;
+package com.example.greenhouse.models;
 
-import com.example.greenhouse.models.clusters.Cluster;
-import com.example.greenhouse.models.device.Device;
 import com.example.greenhouse.util.enums.Role;
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -36,6 +33,6 @@ public class User {
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     private List<Cluster> clusters ;
 
-    @ManyToMany(mappedBy = "workers")
+    @ManyToMany(mappedBy = "workers", fetch = FetchType.LAZY)
     private Set<Cluster> clustersToWork = new HashSet<>();
 }

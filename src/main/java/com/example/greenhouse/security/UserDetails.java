@@ -1,6 +1,6 @@
 package com.example.greenhouse.security;
 
-import com.example.greenhouse.models.user.User;
+import com.example.greenhouse.models.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.jspecify.annotations.Nullable;

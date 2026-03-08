@@ -1,16 +1,16 @@
 package com.example.greenhouse.services;
 
-import com.example.greenhouse.DAO.device.DeviceDAO;
-import com.example.greenhouse.DAO.cluster.ClusterDAO;
-import com.example.greenhouse.DAO.user.UserDAO;
+import com.example.greenhouse.store.DeviceStore;
+import com.example.greenhouse.store.ClusterStore;
+import com.example.greenhouse.store.UserStore;
 import com.example.greenhouse.DTO.cluster.ClusterInfoDTO;
 import com.example.greenhouse.DTO.cluster.RegisterNewClusterDTO;
 import com.example.greenhouse.DTO.device.ClusterDevicesTempSecretsDTO;
 import com.example.greenhouse.DTO.device.DevicesSecretWrapper;
 import com.example.greenhouse.DTO.device.DevicesTempSecretDTO;
-import com.example.greenhouse.models.clusters.Cluster;
-import com.example.greenhouse.models.device.Device;
-import com.example.greenhouse.models.user.User;
+import com.example.greenhouse.models.Cluster;
+import com.example.greenhouse.models.Device;
+import com.example.greenhouse.models.User;
 import com.example.greenhouse.repositories.redis.RedisRepository;
 import com.example.greenhouse.util.Convertor;
 import com.example.greenhouse.util.enums.DeviceStatus;
@@ -29,9 +29,9 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ClusterService {
-    private final ClusterDAO clusterDAO;
-    private final UserDAO userDAO;
-    private final DeviceDAO deviceDAO;
+    private final ClusterStore clusterStore;
+    private final UserStore userStore;
+    private final DeviceStore deviceStore;
     private final DeviceService deviceService;
     private final Convertor convertor;
     private final RedisRepository redisRepository;
@@ -42,16 +42,16 @@ public class ClusterService {
     @Transactional
     public DevicesTempSecretDTO registerNewCluster(RegisterNewClusterDTO registerNewClusterDTO) {
         log.info("Registering new cluster '{}' for owner {}", registerNewClusterDTO.getName(), registerNewClusterDTO.getOwnerId());
-        User user = userDAO.find(registerNewClusterDTO.getOwnerId());
+        User user = userStore.findById(registerNewClusterDTO.getOwnerId());
 
         Cluster cluster = new Cluster();
         cluster.setName(registerNewClusterDTO.getName());
         cluster.setOwner(user);
-        clusterDAO.save(cluster);
+        clusterStore.save(cluster);
 
         List<Device> devicesOfCluster = deviceService.createNewDevices(cluster, registerNewClusterDTO.getDevicesCount());
         cluster.setDevices(devicesOfCluster);
-        deviceDAO.saveAll(devicesOfCluster);
+        deviceStore.saveAll(devicesOfCluster);
 
         List<ClusterDevicesTempSecretsDTO> tempSecrets = devicesOfCluster.stream()
                 .map(d -> new ClusterDevicesTempSecretsDTO(d.getId(), d.getRawSecret()))
@@ -65,7 +65,7 @@ public class ClusterService {
     }
 
     public List<ClusterInfoDTO> findAllClusters() {
-        return convertor.convertToClusterInfoDTO(clusterDAO.findAll());
+        return convertor.convertToClusterInfoDTO(clusterStore.findAll());
     }
 
     @Transactional
@@ -78,23 +78,23 @@ public class ClusterService {
         }
 
         redisRepository.remove(redisKeyCreator.createClusterDevicesTempSecretsKey(token));
-        deviceDAO.updateStatusByClusterId(wrapper.getClusterId(), DeviceStatus.ACTIVE);
+        deviceStore.updateStatusByClusterId(wrapper.getClusterId(), DeviceStatus.ACTIVE);
 
         log.info("Devices for cluster {} activated", wrapper.getClusterId());
         return wrapper.getSecrets();
     }
 
     public List<ClusterInfoDTO> findByOwnerId(long telegramId) {
-        User user = userDAO.find(telegramId);
-        return convertor.convertToClusterInfoDTO(clusterDAO.findByOwner(user));
+        User user = userStore.findById(telegramId);
+        return convertor.convertToClusterInfoDTO(clusterStore.findByOwner(user));
     }
 
     @Transactional
     public void addWorkerToCluster(long ownerId, UUID clusterId, long workerId) throws BadRequestException, AccessDeniedException {
         log.info("Adding worker {} to cluster {}", workerId, clusterId);
-        Cluster cluster = clusterDAO.findById(clusterId);
+        Cluster cluster = clusterStore.findById(clusterId);
         checkOwner(cluster, ownerId);
-        User worker = userDAO.find(workerId);
+        User worker = userStore.findById(workerId);
         isWorker(worker);
 
         if (cluster.getWorkers().contains(worker)) {
@@ -102,16 +102,16 @@ public class ClusterService {
         }
 
         cluster.addWorker(worker);
-        clusterDAO.save(cluster);
+        clusterStore.save(cluster);
         log.info("Worker {} added to cluster {}", workerId, clusterId);
     }
 
     @Transactional
     public void removeWorkerFromCluster(long ownerId, UUID clusterId, long workerId) throws AccessDeniedException, BadRequestException {
         log.info("Removing worker {} from cluster {}", workerId, clusterId);
-        Cluster cluster = clusterDAO.findById(clusterId);
+        Cluster cluster = clusterStore.findById(clusterId);
         checkOwner(cluster, ownerId);
-        User worker = userDAO.find(workerId);
+        User worker = userStore.findById(workerId);
         isWorker(worker);
 
         if (!cluster.getWorkers().contains(worker)) {
@@ -119,12 +119,12 @@ public class ClusterService {
         }
 
         cluster.removeWorker(worker);
-        clusterDAO.save(cluster);
+        clusterStore.save(cluster);
         log.info("Worker {} removed from cluster {}", workerId, clusterId);
     }
 
     public List<ClusterInfoDTO> findByWorker(long workerId) {
-        return convertor.convertToClusterInfoDTO(clusterDAO.findByWorker(workerId));
+        return convertor.convertToClusterInfoDTO(clusterStore.findByWorker(workerId));
     }
 
     private void checkOwner(Cluster cluster, long ownerId){

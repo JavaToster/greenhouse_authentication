@@ -1,6 +1,5 @@
-package com.example.greenhouse.models.device;
+package com.example.greenhouse.models;
 
-import com.example.greenhouse.models.clusters.Cluster;
 import com.example.greenhouse.util.enums.DeviceStatus;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -13,7 +12,7 @@ import java.util.UUID;
 @Table(name = "devices")
 public class Device implements Persistable<UUID> {
     @Id
-    @Column(name = "id", nullable = false)
+    @Column(name = "device_id", nullable = false)
     private UUID id;
 
     @Column(name = "secret", nullable = false)

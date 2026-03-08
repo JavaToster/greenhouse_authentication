@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/migrations/001-users-clusters-devices-init.yaml
   - include:
       file: db/changelog/migrations/002-clusters-workers-init.yaml
+  - include:
+      file: db/changelog/migrations/003-tasks-init.yaml

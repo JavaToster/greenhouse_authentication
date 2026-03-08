@@ -1,6 +1,6 @@
-package com.example.greenhouse.DAO.user;
+package com.example.greenhouse.store;
 
-import com.example.greenhouse.models.user.User;
+import com.example.greenhouse.models.User;
 import com.example.greenhouse.repositories.postgres.UserRepository;
 import com.example.greenhouse.util.enums.Role;
 import jakarta.persistence.EntityNotFoundException;
@@ -8,10 +8,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class UserDAO {
+public class UserStore implements GenericStore<User, Long> {
     private final UserRepository userRepository;
 
     public long count(){
@@ -22,13 +23,14 @@ public class UserDAO {
         return userRepository.countByRole(role);
     }
 
-    public User find(long telegramId){
-        return userRepository.findByTelegramId(telegramId)
-                .orElseThrow(() -> new EntityNotFoundException("Пользователя с таким id не существует"));
+    public boolean exist(long telegramId, String email){
+        return userRepository.existsByTelegramIdOrEmail(telegramId, email);
     }
 
-    public boolean exist(long telegramId){
-        return userRepository.existsByTelegramId(telegramId);
+    @Override
+    public User findById(Long telegramId) {
+        return userRepository.findByTelegramId(telegramId)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователя с таким id не существует"));
     }
 
     public User save(User user){
@@ -41,5 +43,9 @@ public class UserDAO {
 
     public List<User> findAll(){
         return userRepository.findAll();
+    }
+
+    public boolean isWorkerInCluster(long workerId, UUID clusterId){
+        return userRepository.isWorkerInCluster(workerId, clusterId);
     }
 }

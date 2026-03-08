@@ -1,9 +1,9 @@
 package com.example.greenhouse.services;
 
-import com.example.greenhouse.DAO.device.DeviceDAO;
+import com.example.greenhouse.store.DeviceStore;
 import com.example.greenhouse.DTO.auth.DeviceAuthRequestDTO;
-import com.example.greenhouse.models.clusters.Cluster;
-import com.example.greenhouse.models.device.Device;
+import com.example.greenhouse.models.Cluster;
+import com.example.greenhouse.models.Device;
 import com.example.greenhouse.repositories.redis.RedisRepository;
 import com.example.greenhouse.security.EncryptionUtil;
 import com.example.greenhouse.security.JwtUtil;
@@ -32,7 +32,7 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class DeviceService {
-    private final DeviceDAO deviceDAO;
+    private final DeviceStore deviceStore;
     private final JwtUtil jwtUtil;
     private static final long CHALLENGE_TTL_IN_SECONDS = 30;
     private final RedisRepository redisRepository;
@@ -48,7 +48,7 @@ public class DeviceService {
 
     public String verify(DeviceAuthRequestDTO deviceAuthRequestDTO){
         log.info("Authentication attempt for device {}", deviceAuthRequestDTO.getDeviceId());
-        Device device = deviceDAO.findById(deviceAuthRequestDTO.getDeviceId());
+        Device device = deviceStore.findById(deviceAuthRequestDTO.getDeviceId());
 
         String issuedChallenge = redisRepository.findByKey(redisKeyCreator.createChallengeKey(deviceAuthRequestDTO.getDeviceId().toString()), String.class);
 
@@ -118,7 +118,7 @@ public class DeviceService {
     @Transactional
     public UUID remove(UUID deviceId) {
         log.info("Removing device {}", deviceId);
-        deviceDAO.remove(deviceId);
+        deviceStore.remove(deviceId);
         return deviceId;
     }
 }

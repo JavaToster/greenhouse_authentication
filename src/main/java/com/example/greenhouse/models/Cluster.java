@@ -1,7 +1,5 @@
-package com.example.greenhouse.models.clusters;
+package com.example.greenhouse.models;
 
-import com.example.greenhouse.models.device.Device;
-import com.example.greenhouse.models.user.User;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -42,6 +40,9 @@ public class Cluster {
             inverseJoinColumns = @JoinColumn(name = "worker_id")
     )
     private Set<User> workers = new HashSet<>();
+
+    @OneToMany(mappedBy = "cluster")
+    private List<Task> tasks;
 
     public void addWorker(User worker){
         this.workers.add(worker);

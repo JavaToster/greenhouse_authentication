@@ -1,16 +1,13 @@
 package com.example.greenhouse.repositories.postgres;
 
 import com.example.greenhouse.models.Cluster;
-import com.example.greenhouse.models.User;
+import com.example.greenhouse.models.Task;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.UUID;
 
 @Repository
-public interface ClusterRepository extends JpaRepository<Cluster, UUID> {
-    List<Cluster> findByOwner(User owner);
-
-    List<Cluster> findByWorkersTelegramId(long workerId);
+public interface TaskRepository extends JpaRepository<Task, Long> {
+    List<Task> findByCluster(Cluster cluster);
 }
