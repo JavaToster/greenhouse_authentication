@@ -1,7 +1,6 @@
 package com.example.greenhouse.services;
 
 import com.example.greenhouse.DTO.auth.SingInDTO;
-import com.example.greenhouse.exceptions.logic.DataConflictException;
 import com.example.greenhouse.store.UserStore;
 import com.example.greenhouse.DTO.admin.AssignRoleToPersonDTO;
 import com.example.greenhouse.DTO.auth.AfterRegisterDataDTO;
@@ -10,12 +9,11 @@ import com.example.greenhouse.DTO.user.UserInfoDTO;
 import com.example.greenhouse.exceptions.auth.UserAlreadyExistException;
 import com.example.greenhouse.models.User;
 import com.example.greenhouse.security.CustomUserDetailsService;
-import com.example.greenhouse.security.JwtUtil;
+import com.example.greenhouse.security.token.UserTokenService;
 import com.example.greenhouse.util.Convertor;
 import com.example.greenhouse.util.enums.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -30,7 +28,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class UserService implements CustomUserDetailsService {
     private final UserStore userDAO;
-    private final JwtUtil jwtUtil;
+    private final UserTokenService userTokenService;
     private final Convertor convertor;
     private final PasswordEncoder passwordEncoder;
 
@@ -51,7 +49,7 @@ public class UserService implements CustomUserDetailsService {
         userDAO.save(newUser);
         log.info("User {} registered successfully", newUser.getTelegramId());
 
-        return new AfterRegisterDataDTO(jwtUtil.generateToken(authenticationDTO.getTelegramId()));
+        return new AfterRegisterDataDTO(userTokenService.generate(authenticationDTO.getTelegramId()));
     }
 
     public AfterRegisterDataDTO singIn(SingInDTO authenticationDTO) {
@@ -63,7 +61,7 @@ public class UserService implements CustomUserDetailsService {
         }
 
         log.info("User {} signed in successfully", user.getTelegramId());
-        return new AfterRegisterDataDTO(jwtUtil.generateToken(authenticationDTO.getTelegramId()));
+        return new AfterRegisterDataDTO(userTokenService.generate(authenticationDTO.getTelegramId()));
     }
 
     @Override

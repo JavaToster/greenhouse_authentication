@@ -1,30 +1,25 @@
 package com.example.greenhouse.configurations.security;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.example.greenhouse.security.JwtUtil;
-import com.example.greenhouse.services.UserService;
+import com.example.greenhouse.exceptions.auth.InvalidTokenTypeException;
+import com.example.greenhouse.security.token.TokenAuthenticationService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
 
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
-
-    private final JwtUtil jwtUtil;
-    private final UserService userService;
+    private final TokenAuthenticationService authenticationService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -39,26 +34,26 @@ public class JwtFilter extends OncePerRequestFilter {
             String jwt = authHeader.substring(7);
 
             if (jwt.isBlank()) {
-                sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid JWT Token in Bearer Header");
+                sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT Token in Bearer Header");
                 return;
             }
 
-            long telegramId = jwtUtil.validateTokenAndRetrieveSubject(jwt);
-
-            UserDetails userDetails = new com.example.greenhouse.security.UserDetails(userService.findUserByTelegramId(telegramId));
-            UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            userDetails.getPassword(),
-                            userDetails.getAuthorities()
-                    );
+            Authentication authToken = authenticationService.authenticate(jwt);
 
             SecurityContextHolder.getContext().setAuthentication(authToken);
             filterChain.doFilter(request, response);
 
         } catch (JWTVerificationException ex) {
             logger.error("JWT verification failed", ex);
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid JWT Token");
+            sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT Token");
+
+        } catch (InvalidTokenTypeException ex) {
+            logger.error("Token type mismatch", ex);
+            sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "Token type is not allowed for this endpoint");
+
+        } catch (IllegalArgumentException ex) {
+            logger.error("Malformed token payload", ex);
+            sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "Malformed token payload");
 
         } catch (EntityNotFoundException ex) {
             logger.error("User not found", ex);

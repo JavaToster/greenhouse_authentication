@@ -1,36 +1,75 @@
 package com.example.greenhouse.security;
 
+import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.example.greenhouse.security.jwt.TokenType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.Collections;
 import java.util.Date;
-import com.auth0.jwt.JWT;
+import java.util.Map;
 
 @Component
 public class JwtUtil {
+    private static final String ISSUER = "greenhouse";
+    private static final String TOKEN_TYPE_CLAIM = "token_type";
+
     @Value("${spring.security.jwt.secret}")
     private String secret;
 
     public String generateToken(long telegramId){
-        Date expirationDate = Date.from(ZonedDateTime.now().plusYears(1).toInstant());
-        return JWT.create()
-                .withSubject(String.valueOf(telegramId))
-                .withIssuedAt(new Date())
-                .withIssuer("greenhouse")
-                .withExpiresAt(expirationDate)
-                .sign(Algorithm.HMAC256(secret));
+        return generateToken(
+                String.valueOf(telegramId),
+                TokenType.USER,
+                Collections.emptyMap(),
+                Duration.ofDays(365)
+        );
     }
 
-    public long validateTokenAndRetrieveSubject(String token){
+    public String generateToken(String subject, TokenType tokenType, Map<String, Object> claims, Duration ttl) {
+        Date issuedAt = new Date();
+        Date expirationDate = Date.from(ZonedDateTime.now().plus(ttl).toInstant());
+
+        var jwtBuilder = JWT.create()
+                .withSubject(subject)
+                .withIssuedAt(issuedAt)
+                .withIssuer(ISSUER)
+                .withClaim(TOKEN_TYPE_CLAIM, tokenType.name())
+                .withExpiresAt(expirationDate);
+
+        if (claims != null) {
+            claims.forEach((key, value) -> appendClaim(jwtBuilder, key, value));
+        }
+
+        return jwtBuilder.sign(Algorithm.HMAC256(secret));
+    }
+
+    public DecodedJWT verify(String token) {
         JWTVerifier verifier = JWT.require(Algorithm.HMAC256(secret))
-                .withIssuer("greenhouse")
+                .withIssuer(ISSUER)
                 .build();
 
-        DecodedJWT jwt = verifier.verify(token);
-        return Long.valueOf(jwt.getSubject());
+        return verifier.verify(token);
+    }
+
+    public TokenType getTokenType(DecodedJWT jwt) {
+        String type = jwt.getClaim(TOKEN_TYPE_CLAIM).asString();
+        return TokenType.valueOf(type);
+    }
+
+    private void appendClaim(com.auth0.jwt.JWTCreator.Builder jwtBuilder, String key, Object value) {
+        switch (value) {
+            case String stringValue -> jwtBuilder.withClaim(key, stringValue);
+            case Integer intValue -> jwtBuilder.withClaim(key, intValue);
+            case Long longValue -> jwtBuilder.withClaim(key, longValue);
+            case Double doubleValue -> jwtBuilder.withClaim(key, doubleValue);
+            case Boolean booleanValue -> jwtBuilder.withClaim(key, booleanValue);
+            case null, default -> throw new IllegalArgumentException("Unsupported JWT claim type for key: " + key);
+        }
     }
 }

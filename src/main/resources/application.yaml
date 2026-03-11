@@ -52,8 +52,10 @@ spring:
     devices:
       secret:
         encryption:
-          key: "jsafluhguthgutlrifrugholdurhguie"
-          algorithm: "AES"
+          key: ${DEVICE_SECRET_ENCRYPT_KEY}
+          algorithm: ${DEVICE_SECRET_ENCRYPT_ALGORITHM}
+          iv-length-bytes: ${DEVICE_SECRET_ENCRYPT_IV_LENGTH_BYTES}
+          tag-length-bits: ${DEVICE_SECRET_ENCRYPT_TAG_LENGTH_BITS}
 
 
   servlet:

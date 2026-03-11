@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260308-1
+      author: TosterW
+      changes:
+        - createTable:
+            tableName: telemetries
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_telemetries
+                    nullable: false
+              - column:
+                  name: temperature
+                  type: double precision
+                  constraints:
+                    nullable: false
+              - column:
+                  name: air_humidity
+                  type: double precision
+                  constraints:
+                    nullable: false
+              - column:
+                  name: soil_humidity
+                  type: double precision
+                  constraints:
+                    nullable: false
+              - column:
+                  name: illumination
+                  type: double precision
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false

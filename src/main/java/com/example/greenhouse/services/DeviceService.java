@@ -6,7 +6,7 @@ import com.example.greenhouse.models.Cluster;
 import com.example.greenhouse.models.Device;
 import com.example.greenhouse.repositories.redis.RedisRepository;
 import com.example.greenhouse.security.EncryptionUtil;
-import com.example.greenhouse.security.JwtUtil;
+import com.example.greenhouse.security.token.DeviceTokenService;
 import com.example.greenhouse.util.enums.DeviceStatus;
 import com.example.greenhouse.util.redis.RedisKeyCreator;
 import lombok.RequiredArgsConstructor;
@@ -33,11 +33,11 @@ import java.util.stream.IntStream;
 @Transactional(readOnly = true)
 public class DeviceService {
     private final DeviceStore deviceStore;
-    private final JwtUtil jwtUtil;
     private static final long CHALLENGE_TTL_IN_SECONDS = 30;
     private final RedisRepository redisRepository;
     private final RedisKeyCreator redisKeyCreator;
     private final EncryptionUtil encryptionUtil;
+    private final DeviceTokenService deviceTokenService;
 
     public String generateChallenge(String deviceId) {
         log.debug("Generating challenge for device {}", deviceId);
@@ -65,7 +65,7 @@ public class DeviceService {
         redisRepository.remove(redisKeyCreator.createChallengeKey(deviceAuthRequestDTO.getDeviceId().toString()));
         log.info("Device {} successfully authenticated", device.getId());
 
-        return jwtUtil.generateToken(device.getCluster().getOwner().getTelegramId());
+        return deviceTokenService.generate(device.getId(), device.getCluster().getId());
     }
 
     private void validateSignature(String clientSig, String data, String secret){
