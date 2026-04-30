@@ -15,6 +15,14 @@ databaseChangeLog:
                     primaryKeyName: pk_telemetries
                     nullable: false
               - column:
+                  name: device_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_telemetry_device
+                    referencedTableName: devices
+                    referencedColumnNames: device_id
+              - column:
                   name: temperature
                   type: double precision
                   constraints:

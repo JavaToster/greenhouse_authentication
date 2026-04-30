@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260402-1
+      author: TosterW
+      changes:
+        - createIndex:
+            tableName: telemetries
+            indexName: idx_telemetries_device_created_at
+            columns:
+              - column:
+                  name: device_id
+              - column:
+                  name: created_at

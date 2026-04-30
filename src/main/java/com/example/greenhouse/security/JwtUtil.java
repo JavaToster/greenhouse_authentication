@@ -59,6 +59,9 @@ public class JwtUtil {
 
     public TokenType getTokenType(DecodedJWT jwt) {
         String type = jwt.getClaim(TOKEN_TYPE_CLAIM).asString();
+        if (type == null || type.isBlank()) {
+            throw new IllegalArgumentException("Missing token_type claim");
+        }
         return TokenType.valueOf(type);
     }
 

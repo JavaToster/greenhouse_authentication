@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -20,4 +21,6 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
     void updateStatusByClusterId(UUID clusterId, DeviceStatus status);
 
     long countByStatus(DeviceStatus status);
+
+    List<Device> findByClusterId(UUID clusterId);
 }

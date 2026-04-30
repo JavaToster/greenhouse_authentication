@@ -30,7 +30,7 @@ public class AuthController {
         return ResponseEntity.ok(afterRegisterDataDTO);
     }
 
-    @GetMapping("/device/challenge/{deviceId}")
+    @PostMapping("/device/challenge/{deviceId}")
     public ResponseEntity<String> getChallenge(@PathVariable String deviceId){
         String challenge = deviceService.generateChallenge(deviceId);
         return ResponseEntity.ok(challenge);

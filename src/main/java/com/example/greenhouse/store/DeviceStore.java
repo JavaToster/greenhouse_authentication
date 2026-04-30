@@ -41,6 +41,10 @@ public class DeviceStore implements GenericStore<Device, UUID> {
         return deviceRepository.save(device);
     }
 
+    public List<Device> findByClusterId(UUID clusterId) {
+        return deviceRepository.findByClusterId(clusterId);
+    }
+
     public void remove(UUID id){
         deviceRepository.deleteById(id);
     }
