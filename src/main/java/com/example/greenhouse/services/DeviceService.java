@@ -6,7 +6,7 @@ import com.example.greenhouse.models.Cluster;
 import com.example.greenhouse.models.Device;
 import com.example.greenhouse.repositories.redis.RedisRepository;
 import com.example.greenhouse.security.EncryptionUtil;
-import com.example.greenhouse.security.token.DeviceTokenService;
+import com.example.greenhouse.services.token.DeviceTokenService;
 import com.example.greenhouse.util.enums.DeviceStatus;
 import com.example.greenhouse.util.redis.RedisKeyCreator;
 import lombok.RequiredArgsConstructor;

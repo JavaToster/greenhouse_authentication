@@ -13,24 +13,24 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/users")
 public class UserController {
     private final UserService userService;
 
-    @PatchMapping("/api/admin/users/{telegramId}/role")
+    @PatchMapping("/{telegramId}/role")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Long> role(@PathVariable("telegramId") long id, @Valid @RequestBody AssignRoleToPersonDTO assignPersonDTO){
         userService.setRoleOfUser(id, assignPersonDTO);
         return ResponseEntity.ok(id);
     }
 
-    @DeleteMapping("/api/admin/users/{telegramId}/remove")
+    @DeleteMapping("/{telegramId}/remove")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Long> removeUser(@PathVariable("telegramId") long id){
         userService.remove(id);
         return ResponseEntity.ok(id);
     }
 
-    @GetMapping("/api/admin/users")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserInfoDTO>> getAllUsers(){
         return ResponseEntity.ok(userService.findAllUsers());

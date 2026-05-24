@@ -6,22 +6,16 @@ import com.example.greenhouse.security.jwt.TokenType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.util.Collections;
+import com.example.greenhouse.util.enums.Role;
 
 @Service
 @RequiredArgsConstructor
 public class UserTokenService {
-    private static final Duration USER_TOKEN_TTL = Duration.ofDays(365);
-
     private final JwtUtil jwtUtil;
 
-    public String generate(long telegramId) {
+    public String generate(long telegramId, Role role) {
         return jwtUtil.generateToken(
-                String.valueOf(telegramId),
-                TokenType.USER,
-                Collections.emptyMap(),
-                USER_TOKEN_TTL
+                telegramId, role
         );
     }
 

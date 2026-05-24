@@ -1,4 +1,4 @@
-package com.example.greenhouse.security.token;
+package com.example.greenhouse.services.token;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.greenhouse.security.JwtUtil;

@@ -5,12 +5,14 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.greenhouse.security.jwt.TokenType;
+
+import com.example.greenhouse.util.enums.Role;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 
@@ -18,16 +20,19 @@ import java.util.Map;
 public class JwtUtil {
     private static final String ISSUER = "greenhouse";
     private static final String TOKEN_TYPE_CLAIM = "token_type";
+    private static final String ROLE_CLAIM = "role";
+    private static final Duration USER_TOKEN_TTL = Duration.ofDays(14);
+
 
     @Value("${spring.security.jwt.secret}")
     private String secret;
 
-    public String generateToken(long telegramId){
+    public String generateToken(long telegramId, Role role){
         return generateToken(
                 String.valueOf(telegramId),
                 TokenType.USER,
-                Collections.emptyMap(),
-                Duration.ofDays(365)
+                Map.of(ROLE_CLAIM, role.name()),
+                USER_TOKEN_TTL
         );
     }
 

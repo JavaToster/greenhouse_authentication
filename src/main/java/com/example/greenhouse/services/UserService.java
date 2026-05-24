@@ -49,7 +49,7 @@ public class UserService implements CustomUserDetailsService {
         userDAO.save(newUser);
         log.info("User {} registered successfully", newUser.getTelegramId());
 
-        return new AfterRegisterDataDTO(userTokenService.generate(authenticationDTO.getTelegramId()));
+        return new AfterRegisterDataDTO(userTokenService.generate(authenticationDTO.getTelegramId(), Role.ROLE_UNKNOWN));
     }
 
     public AfterRegisterDataDTO singIn(SingInDTO authenticationDTO) {
@@ -61,7 +61,7 @@ public class UserService implements CustomUserDetailsService {
         }
 
         log.info("User {} signed in successfully", user.getTelegramId());
-        return new AfterRegisterDataDTO(userTokenService.generate(authenticationDTO.getTelegramId()));
+        return new AfterRegisterDataDTO(userTokenService.generate(authenticationDTO.getTelegramId(), user.getRole()));
     }
 
     @Override
