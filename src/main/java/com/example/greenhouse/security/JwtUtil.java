@@ -80,4 +80,9 @@ public class JwtUtil {
             case null, default -> throw new IllegalArgumentException("Unsupported JWT claim type for key: " + key);
         }
     }
+
+    public Role getRole(DecodedJWT jwt) {
+        String role = jwt.getClaim(ROLE_CLAIM).asString();
+        return (role != null) ? Role.valueOf(role) : Role.ROLE_UNKNOWN;
+    }
 }

@@ -2,7 +2,7 @@ package com.example.greenhouse.controllers;
 
 import com.example.greenhouse.DTO.cluster.ClusterTelemetryDTO;
 import com.example.greenhouse.DTO.device.AddTelemetryDTO;
-import com.example.greenhouse.security.token.DevicePrincipal;
+import com.example.greenhouse.security.DevicePrincipal;
 import com.example.greenhouse.services.TelemetryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

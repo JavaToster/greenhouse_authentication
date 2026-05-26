@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Component
@@ -47,5 +48,9 @@ public class UserStore implements GenericStore<User, Long> {
 
     public boolean isWorkerInCluster(long workerId, UUID clusterId){
         return userRepository.isWorkerInCluster(workerId, clusterId);
+    }
+
+    public List<User> findByIds(Set<Long> ids) {
+        return userRepository.findByTelegramIdIn(ids);
     }
 }

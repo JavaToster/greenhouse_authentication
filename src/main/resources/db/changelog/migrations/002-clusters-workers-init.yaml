@@ -2,6 +2,11 @@ databaseChangeLog:
   - changeSet:
       id: 20260205-1
       author: TosterW
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: clusters
       changes:
         - createTable:
             tableName: clusters_workers

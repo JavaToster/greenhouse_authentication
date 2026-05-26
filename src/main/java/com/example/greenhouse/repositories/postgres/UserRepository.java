@@ -7,7 +7,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Repository
@@ -20,4 +22,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "WHERE u.telegramId = :userId AND c.id = :clusterId"
     )
     boolean isWorkerInCluster(@Param("userId") long workerId, @Param("clusterId") UUID clusterId);
+
+    List<User> findByTelegramIdIn(Set<Long> ids);
 }

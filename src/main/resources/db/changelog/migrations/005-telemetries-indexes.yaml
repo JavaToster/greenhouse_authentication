@@ -2,6 +2,11 @@ databaseChangeLog:
   - changeSet:
       id: 20260402-1
       author: TosterW
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: clusters
       changes:
         - createIndex:
             tableName: telemetries

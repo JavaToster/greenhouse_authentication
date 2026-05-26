@@ -1,4 +1,4 @@
-package com.example.greenhouse.security.token;
+package com.example.greenhouse.security;
 
 import java.util.UUID;
 

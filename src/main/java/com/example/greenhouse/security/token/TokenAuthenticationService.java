@@ -2,16 +2,18 @@ package com.example.greenhouse.security.token;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.greenhouse.exceptions.auth.InvalidTokenTypeException;
+import com.example.greenhouse.security.DevicePrincipal;
 import com.example.greenhouse.security.JwtUtil;
+import com.example.greenhouse.security.UserPrincipal;
 import com.example.greenhouse.security.jwt.TokenType;
-import com.example.greenhouse.services.UserService;
+import com.example.greenhouse.util.enums.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,7 +23,12 @@ public class TokenAuthenticationService {
     private static final String CLUSTER_ID_CLAIM = "cluster_id";
 
     private final JwtUtil jwtUtil;
-    private final UserService userService;
+
+    public String generate(long telegramId, Role role) {
+        return jwtUtil.generateToken(
+                telegramId, role
+        );
+    }
 
     public Authentication authenticate(String token) {
         DecodedJWT jwt = jwtUtil.verify(token);
@@ -33,25 +40,25 @@ public class TokenAuthenticationService {
         }
 
         return switch (tokenType) {
-            case USER -> authenticateUser(jwt);
-            case DEVICE -> authenticateDevice(jwt);
+            case USER -> authenticateUser(jwt, token);
+            case DEVICE -> authenticateDevice(jwt, token);
         };
     }
 
-    private Authentication authenticateUser(DecodedJWT jwt) {
+    private Authentication authenticateUser(DecodedJWT jwt, String token) {
         long telegramId = Long.parseLong(jwt.getSubject());
-        UserDetails userDetails = new com.example.greenhouse.security.UserDetails(
-                userService.findUserByTelegramId(telegramId)
-        );
+        Role role = jwtUtil.getRole(jwt);
+
+        UserPrincipal userPrincipal = new UserPrincipal(telegramId, role);
 
         return new UsernamePasswordAuthenticationToken(
-                userDetails,
-                null,
-                userDetails.getAuthorities()
+                userPrincipal,
+                token,
+                Collections.singletonList(new SimpleGrantedAuthority(role.name()))
         );
     }
 
-    private Authentication authenticateDevice(DecodedJWT jwt) {
+    private Authentication authenticateDevice(DecodedJWT jwt, String token) {
         UUID deviceId = UUID.fromString(jwt.getSubject());
         String clusterIdRaw = jwt.getClaim(CLUSTER_ID_CLAIM).asString();
         if (clusterIdRaw == null || clusterIdRaw.isBlank()) {
@@ -61,7 +68,7 @@ public class TokenAuthenticationService {
         DevicePrincipal principal = new DevicePrincipal(deviceId, UUID.fromString(clusterIdRaw));
         return new UsernamePasswordAuthenticationToken(
                 principal,
-                null,
+                token,
                 List.of(new SimpleGrantedAuthority("ROLE_DEVICE"))
         );
     }
