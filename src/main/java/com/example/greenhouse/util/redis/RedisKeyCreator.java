@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import java.util.UUID;
 
 @Component
+@Deprecated
 public class RedisKeyCreator {
     private static final String CHALLENGE_PREFIX = "challenge:";
     private static final String CLUSTER_DEVICES_TEMP_SECRETS_PREFIX = "cluster-devices-temp-secrets-prefix:";

@@ -1,4 +1,4 @@
-package com.example.greenhouse.security.jwt;
+package com.example.greenhouse.util.enums;
 
 public enum TokenType {
     USER,

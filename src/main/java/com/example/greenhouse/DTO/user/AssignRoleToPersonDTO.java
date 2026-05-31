@@ -1,4 +1,4 @@
-package com.example.greenhouse.DTO.admin;
+package com.example.greenhouse.DTO.user;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

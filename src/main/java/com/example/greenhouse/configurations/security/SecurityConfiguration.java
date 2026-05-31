@@ -1,5 +1,6 @@
 package com.example.greenhouse.configurations.security;
 
+import com.example.greenhouse.security.jwt.JwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

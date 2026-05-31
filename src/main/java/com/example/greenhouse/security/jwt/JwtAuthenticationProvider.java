@@ -1,11 +1,10 @@
-package com.example.greenhouse.security.token;
+package com.example.greenhouse.security.jwt;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.greenhouse.exceptions.auth.InvalidTokenTypeException;
 import com.example.greenhouse.security.DevicePrincipal;
-import com.example.greenhouse.security.JwtUtil;
 import com.example.greenhouse.security.UserPrincipal;
-import com.example.greenhouse.security.jwt.TokenType;
+import com.example.greenhouse.util.enums.TokenType;
 import com.example.greenhouse.util.enums.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,7 +18,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class TokenAuthenticationService {
+public class JwtAuthenticationProvider {
     private static final String CLUSTER_ID_CLAIM = "cluster_id";
 
     private final JwtUtil jwtUtil;

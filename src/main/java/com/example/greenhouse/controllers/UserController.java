@@ -1,6 +1,6 @@
 package com.example.greenhouse.controllers;
 
-import com.example.greenhouse.DTO.admin.AssignRoleToPersonDTO;
+import com.example.greenhouse.DTO.user.AssignRoleToPersonDTO;
 import com.example.greenhouse.DTO.user.UserInfoBatchRequestDTO;
 import com.example.greenhouse.DTO.user.UserInfoDTO;
 import com.example.greenhouse.services.UserService;

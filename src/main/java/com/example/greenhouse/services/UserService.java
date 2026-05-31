@@ -1,15 +1,14 @@
 package com.example.greenhouse.services;
 
 import com.example.greenhouse.DTO.auth.SingInDTO;
-import com.example.greenhouse.security.token.TokenAuthenticationService;
+import com.example.greenhouse.security.jwt.JwtAuthenticationProvider;
 import com.example.greenhouse.store.UserStore;
-import com.example.greenhouse.DTO.admin.AssignRoleToPersonDTO;
-import com.example.greenhouse.DTO.auth.AfterRegisterDataDTO;
+import com.example.greenhouse.DTO.user.AssignRoleToPersonDTO;
+import com.example.greenhouse.DTO.auth.SuccessfullyAuthenticatedDTO;
 import com.example.greenhouse.DTO.auth.SingUpDTO;
 import com.example.greenhouse.DTO.user.UserInfoDTO;
 import com.example.greenhouse.exceptions.auth.UserAlreadyExistException;
 import com.example.greenhouse.models.User;
-import com.example.greenhouse.security.CustomUserDetailsService;
 import com.example.greenhouse.util.Convertor;
 import com.example.greenhouse.util.enums.Role;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Set;
@@ -27,7 +27,7 @@ import java.util.Set;
 @Transactional(readOnly = true)
 public class UserService implements CustomUserDetailsService {
     private final UserStore userStore;
-    private final TokenAuthenticationService tokenAuthenticationService;
+    private final JwtAuthenticationProvider jwtAuthenticationProvider;
     private final Convertor convertor;
     private final PasswordEncoder passwordEncoder;
 
@@ -36,8 +36,8 @@ public class UserService implements CustomUserDetailsService {
         return convertor.convertToUserInfoDTO(userStore.findById(telegramId));
     }
 
-    @Transactional
-    public AfterRegisterDataDTO singUp(SingUpDTO authenticationDTO){
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public SuccessfullyAuthenticatedDTO singUp(SingUpDTO authenticationDTO){
         log.info("Attempting signup for user {}", authenticationDTO.getTelegramId());
         if(userStore.exist(authenticationDTO.getTelegramId(), authenticationDTO.getEmail())){
             throw new UserAlreadyExistException("User already exists");
@@ -48,10 +48,10 @@ public class UserService implements CustomUserDetailsService {
         userStore.save(newUser);
         log.info("User {} registered successfully", newUser.getTelegramId());
 
-        return new AfterRegisterDataDTO(tokenAuthenticationService.generate(authenticationDTO.getTelegramId(), Role.ROLE_UNKNOWN));
+        return new SuccessfullyAuthenticatedDTO(jwtAuthenticationProvider.generate(authenticationDTO.getTelegramId(), Role.ROLE_UNKNOWN));
     }
 
-    public AfterRegisterDataDTO singIn(SingInDTO authenticationDTO) {
+    public SuccessfullyAuthenticatedDTO singIn(SingInDTO authenticationDTO) {
         log.info("Sign-in attempt for user {}", authenticationDTO.getTelegramId());
         User user = userStore.findById(authenticationDTO.getTelegramId());
 
@@ -60,10 +60,10 @@ public class UserService implements CustomUserDetailsService {
         }
 
         log.info("User {} signed in successfully", user.getTelegramId());
-        return new AfterRegisterDataDTO(tokenAuthenticationService.generate(authenticationDTO.getTelegramId(), user.getRole()));
+        return new SuccessfullyAuthenticatedDTO(jwtAuthenticationProvider.generate(authenticationDTO.getTelegramId(), user.getRole()));
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void setRoleOfUser(long id, AssignRoleToPersonDTO assignRoleToPersonDTO) {
         log.info("Updating role for user {} to {}", id, assignRoleToPersonDTO.getRole());
         User user = userStore.findById(id);
@@ -80,6 +80,7 @@ public class UserService implements CustomUserDetailsService {
     public List<UserInfoDTO> findAllUsers() {
         return convertor.convertToUserInfoDTO(userStore.findAll());
     }
+
     public List<UserInfoDTO> findUsersById(Set<Long> ids){
         List<User> users = userStore.findByIds(ids);
         return convertor.convertToUserInfoDTO(users);

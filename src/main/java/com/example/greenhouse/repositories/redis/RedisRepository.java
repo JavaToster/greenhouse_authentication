@@ -8,6 +8,7 @@ import java.time.Duration;
 
 @Repository
 @RequiredArgsConstructor
+@Deprecated
 public class RedisRepository {
     private final RedisTemplate<String, Object> redisTemplate;
 

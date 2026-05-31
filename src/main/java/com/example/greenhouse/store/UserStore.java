@@ -16,14 +16,6 @@ import java.util.UUID;
 public class UserStore implements GenericStore<User, Long> {
     private final UserRepository userRepository;
 
-    public long count(){
-        return userRepository.count();
-    }
-
-    public long count(Role role){
-        return userRepository.countByRole(role);
-    }
-
     public boolean exist(long telegramId, String email){
         return userRepository.existsByTelegramIdOrEmail(telegramId, email);
     }
@@ -44,10 +36,6 @@ public class UserStore implements GenericStore<User, Long> {
 
     public List<User> findAll(){
         return userRepository.findAll();
-    }
-
-    public boolean isWorkerInCluster(long workerId, UUID clusterId){
-        return userRepository.isWorkerInCluster(workerId, clusterId);
     }
 
     public List<User> findByIds(Set<Long> ids) {

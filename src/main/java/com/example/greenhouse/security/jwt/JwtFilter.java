@@ -1,8 +1,7 @@
-package com.example.greenhouse.configurations.security;
+package com.example.greenhouse.security.jwt;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.example.greenhouse.exceptions.auth.InvalidTokenTypeException;
-import com.example.greenhouse.security.token.TokenAuthenticationService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,7 +18,7 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
-    private final TokenAuthenticationService authenticationService;
+    private final JwtAuthenticationProvider authenticationService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
