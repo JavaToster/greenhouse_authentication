@@ -14,7 +14,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "users")
-@EqualsAndHashCode(onlyExplicitlyIncluded = true) // Говорим использовать только помеченные поля
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
     @Id
     @Column(name = "telegram_id")
@@ -29,10 +29,4 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;
-
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-    private List<Cluster> clusters ;
-
-    @ManyToMany(mappedBy = "workers", fetch = FetchType.LAZY)
-    private Set<Cluster> clustersToWork = new HashSet<>();
 }

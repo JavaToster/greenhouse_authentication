@@ -16,12 +16,5 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByTelegramId(long telegramId);
     boolean existsByTelegramIdOrEmail(long telegramId, String email);
-    long countByRole(Role role);
-    @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END "+
-            "FROM User u JOIN u.clustersToWork c " +
-            "WHERE u.telegramId = :userId AND c.id = :clusterId"
-    )
-    boolean isWorkerInCluster(@Param("userId") long workerId, @Param("clusterId") UUID clusterId);
-
     List<User> findByTelegramIdIn(Set<Long> ids);
 }
