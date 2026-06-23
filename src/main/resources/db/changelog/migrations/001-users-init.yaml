@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260124-1
+      author: TosterW
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: clusters
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: telegram_id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(40)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: password
+                  type: varchar(60)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: varchar(20)
+                  defaultValue: "ROLE_UNKNOWN"
