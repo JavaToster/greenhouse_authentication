@@ -6,25 +6,29 @@ spring:
     import: optional:file:.env
   application:
     name: greenhouse
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: ${AUTHENTICATION_SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
-    jpa:
-      properties:
-        hibernate:
-          dialect: org.hibernate.dialect.PostgreSQLDialect
-          show_sql: true
-          format_sql: true
-          jdbc:
-            batch_size: 20
-            generate_statistics: true
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        show_sql: true
+        format_sql: true
+        jdbc:
+          batch_size: 20
+          generate_statistics: true
+
   mvc:
     hidden:
       method:
         filter:
           enabled: true
+
   security:
     jwt:
       secret: ${SECURITY_JWT}
