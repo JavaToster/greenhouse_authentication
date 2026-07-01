@@ -14,14 +14,14 @@ public class AuthController {
 
     private final UserService userService;
 
-    @PostMapping("/sing-up")
+    @PostMapping("/sign-up")
     public ResponseEntity<SuccessfullyAuthenticatedDTO> singUp(@Valid @RequestBody SingUpDTO authenticationDTO){
         SuccessfullyAuthenticatedDTO successfullyAuthenticatedDTO = userService.singUp(authenticationDTO);
 
         return ResponseEntity.ok(successfullyAuthenticatedDTO);
     }
 
-    @PostMapping("/sing-in")
+    @PostMapping("/sign-in")
     public ResponseEntity<SuccessfullyAuthenticatedDTO> singIn(@Valid @RequestBody SingInDTO authenticationDTO){
         SuccessfullyAuthenticatedDTO successfullyAuthenticatedDTO = userService.singIn(authenticationDTO);
 

@@ -32,6 +32,7 @@ public class UserController {
         return ResponseEntity.ok(id);
     }
 
+    @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserInfoDTO>> getAllUsers(){
         return ResponseEntity.ok(userService.findAllUsers());
@@ -44,6 +45,7 @@ public class UserController {
     }
 
     @PostMapping("/batch")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'INSTALLER')")
     public ResponseEntity<List<UserInfoDTO>> getUsers(@Valid @RequestBody UserInfoBatchRequestDTO idsDTO){
         return ResponseEntity.ok(userService.findUsersById(idsDTO.getUserIds()));
     }
