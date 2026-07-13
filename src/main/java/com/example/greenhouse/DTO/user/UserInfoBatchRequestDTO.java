@@ -1,14 +1,15 @@
 package com.example.greenhouse.DTO.user;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
 
 import java.util.Set;
 
-@Data
-public class UserInfoBatchRequestDTO {
-    @NotEmpty(message = "Ids set should be not empty")
-    @Size(max = 500, message = "You can't request more 500 users inside one batch")
-    private Set<Long> userIds;
-}
+@Schema(description = "Batch request with Telegram IDs")
+public record UserInfoBatchRequestDTO(
+        @Schema(description = "Telegram user identifiers", example = "[123456789, 987654321]")
+        @NotEmpty(message = "User IDs set must not be empty")
+        @Size(max = 500, message = "You cannot request more than 500 users in one batch")
+        Set<Long> userIds
+) {}

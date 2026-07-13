@@ -3,20 +3,19 @@ package com.example.greenhouse.util;
 import com.example.greenhouse.DTO.auth.SingUpDTO;
 import com.example.greenhouse.DTO.user.UserInfoDTO;
 import com.example.greenhouse.models.User;
-import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 public class Convertor {
-    private final ModelMapper modelMapper;
-
     public User convertToUser(SingUpDTO authenticationDTO){
-        return modelMapper.map(authenticationDTO, User.class);
+        User user = new User();
+        user.setTelegramId(authenticationDTO.telegramId());
+        user.setEmail(authenticationDTO.email());
+        user.setPassword(authenticationDTO.password());
+        return user;
     }
 
     public List<UserInfoDTO> convertToUserInfoDTO(Collection<? extends User> all) {
@@ -26,6 +25,6 @@ public class Convertor {
     }
 
     public UserInfoDTO convertToUserInfoDTO(User user){
-        return modelMapper.map(user, UserInfoDTO.class);
+        return new UserInfoDTO(user.getTelegramId(), user.getEmail(), user.getRole());
     }
 }

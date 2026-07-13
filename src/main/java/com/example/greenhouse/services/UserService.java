@@ -38,36 +38,36 @@ public class UserService implements CustomUserDetailsService {
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public SuccessfullyAuthenticatedDTO singUp(SingUpDTO authenticationDTO){
-        log.info("Attempting signup for user {}", authenticationDTO.getTelegramId());
-        if(userStore.exist(authenticationDTO.getTelegramId(), authenticationDTO.getEmail())){
+        log.info("Attempting signup for user {}", authenticationDTO.telegramId());
+        if(userStore.exist(authenticationDTO.telegramId(), authenticationDTO.email())){
             throw new UserAlreadyExistException("User already exists");
         }
         User newUser = convertor.convertToUser(authenticationDTO);
         newUser.setRole(Role.ROLE_UNKNOWN);
-        newUser.setPassword(passwordEncoder.encode(authenticationDTO.getPassword()));
+        newUser.setPassword(passwordEncoder.encode(authenticationDTO.password()));
         userStore.save(newUser);
         log.info("User {} registered successfully", newUser.getTelegramId());
 
-        return new SuccessfullyAuthenticatedDTO(jwtAuthenticationProvider.generate(authenticationDTO.getTelegramId(), Role.ROLE_UNKNOWN));
+        return new SuccessfullyAuthenticatedDTO(jwtAuthenticationProvider.generate(authenticationDTO.telegramId(), Role.ROLE_UNKNOWN));
     }
 
     public SuccessfullyAuthenticatedDTO singIn(SingInDTO authenticationDTO) {
-        log.info("Sign-in attempt for user {}", authenticationDTO.getTelegramId());
-        User user = userStore.findById(authenticationDTO.getTelegramId());
+        log.info("Sign-in attempt for user {}", authenticationDTO.telegramId());
+        User user = userStore.findById(authenticationDTO.telegramId());
 
-        if (!passwordEncoder.matches(authenticationDTO.getPassword(), user.getPassword())){
+        if (!passwordEncoder.matches(authenticationDTO.password(), user.getPassword())){
             throw new BadCredentialsException("Invalid login or password");
         }
 
         log.info("User {} signed in successfully", user.getTelegramId());
-        return new SuccessfullyAuthenticatedDTO(jwtAuthenticationProvider.generate(authenticationDTO.getTelegramId(), user.getRole()));
+        return new SuccessfullyAuthenticatedDTO(jwtAuthenticationProvider.generate(authenticationDTO.telegramId(), user.getRole()));
     }
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void setRoleOfUser(long id, AssignRoleToPersonDTO assignRoleToPersonDTO) {
-        log.info("Updating role for user {} to {}", id, assignRoleToPersonDTO.getRole());
+        log.info("Updating role for user {} to {}", id, assignRoleToPersonDTO.role());
         User user = userStore.findById(id);
-        user.setRole(Role.valueOf(assignRoleToPersonDTO.getRole()));
+        user.setRole(Role.valueOf(assignRoleToPersonDTO.role()));
         userStore.save(user);
     }
 

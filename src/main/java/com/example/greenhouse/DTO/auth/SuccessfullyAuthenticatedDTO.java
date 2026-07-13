@@ -1,10 +1,6 @@
 package com.example.greenhouse.DTO.auth;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@Data
-@AllArgsConstructor
-public class SuccessfullyAuthenticatedDTO {
-    private String jwt;
-}
+@Schema(description = "Authentication result containing the issued JWT")
+public record SuccessfullyAuthenticatedDTO(String jwt) {}
