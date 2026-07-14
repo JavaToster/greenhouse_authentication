@@ -6,6 +6,7 @@ import com.example.greenhouse.DTO.user.UserInfoDTO;
 import com.example.greenhouse.services.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
@@ -32,6 +34,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "User role updated")
     })
     public ResponseEntity<Long> role(@PathVariable("telegramId") long id, @Valid @RequestBody AssignRoleToPersonDTO assignPersonDTO) {
+        log.info("Received request to update role for user id={} to role={}", id, assignPersonDTO.role());
         userService.setRoleOfUser(id, assignPersonDTO);
         return ResponseEntity.ok(id);
     }
@@ -43,6 +46,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "User deleted")
     })
     public ResponseEntity<Long> removeUser(@PathVariable("telegramId") long id) {
+        log.info("Received request to remove user id={}", id);
         userService.remove(id);
         return ResponseEntity.ok(id);
     }
@@ -54,6 +58,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Users returned successfully")
     })
     public ResponseEntity<List<UserInfoDTO>> getAllUsers() {
+        log.debug("Received request to fetch all users");
         return ResponseEntity.ok(userService.findAllUsers());
     }
 
@@ -64,6 +69,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "User returned successfully")
     })
     public ResponseEntity<UserInfoDTO> getUser(@PathVariable("telegramId") Long telegramId) {
+        log.debug("Received request to fetch user by telegramId={}", telegramId);
         return ResponseEntity.ok(userService.findUserByTelegramId(telegramId));
     }
 
@@ -74,6 +80,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Users returned successfully")
     })
     public ResponseEntity<List<UserInfoDTO>> getUsers(@Valid @RequestBody UserInfoBatchRequestDTO idsDTO) {
+        log.debug("Received batch request to fetch {} users", idsDTO.userIds().size());
         return ResponseEntity.ok(userService.findUsersById(idsDTO.userIds()));
     }
 }

@@ -7,6 +7,7 @@ import com.example.greenhouse.security.UserPrincipal;
 import com.example.greenhouse.util.enums.TokenType;
 import com.example.greenhouse.util.enums.Role;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -16,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JwtAuthenticationProvider {
@@ -24,6 +26,7 @@ public class JwtAuthenticationProvider {
     private final JwtUtil jwtUtil;
 
     public String generate(long telegramId, Role role) {
+        log.debug("Generating JWT token for telegramId={}, role={}", telegramId, role);
         return jwtUtil.generateToken(
                 telegramId, role
         );
@@ -35,8 +38,11 @@ public class JwtAuthenticationProvider {
         try {
             tokenType = jwtUtil.getTokenType(jwt);
         } catch (RuntimeException ex) {
+            log.warn("Failed to extract or parse token_type claim from JWT");
             throw new InvalidTokenTypeException("Invalid token_type claim", ex);
         }
+
+        log.debug("Extracted token type: {} from JWT payload", tokenType);
 
         return switch (tokenType) {
             case USER -> authenticateUser(jwt, token);
@@ -48,6 +54,7 @@ public class JwtAuthenticationProvider {
         long telegramId = Long.parseLong(jwt.getSubject());
         Role role = jwtUtil.getRole(jwt);
 
+        log.debug("Authenticating USER principal: telegramId={}, role={}", telegramId, role);
         UserPrincipal userPrincipal = new UserPrincipal(telegramId, role);
 
         return new UsernamePasswordAuthenticationToken(
@@ -61,9 +68,11 @@ public class JwtAuthenticationProvider {
         UUID deviceId = UUID.fromString(jwt.getSubject());
         String clusterIdRaw = jwt.getClaim(CLUSTER_ID_CLAIM).asString();
         if (clusterIdRaw == null || clusterIdRaw.isBlank()) {
+            log.warn("Device authentication rejected: missing required claim '{}' for device ID [{}]", CLUSTER_ID_CLAIM, deviceId);
             throw new IllegalArgumentException("Device token has no cluster_id claim");
         }
 
+        log.debug("Authenticating DEVICE principal: deviceId=[{}], bound to cluster=[{}]", deviceId, clusterIdRaw);
         DevicePrincipal principal = new DevicePrincipal(deviceId, UUID.fromString(clusterIdRaw));
         return new UsernamePasswordAuthenticationToken(
                 principal,

@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
@@ -30,6 +32,7 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "User signed up successfully")
     })
     public ResponseEntity<SuccessfullyAuthenticatedDTO> singUp(@Valid @RequestBody SingUpDTO authenticationDTO){
+        log.debug("Received sign-up HTTP request for telegramId={}", authenticationDTO.telegramId());
         SuccessfullyAuthenticatedDTO successfullyAuthenticatedDTO = userService.singUp(authenticationDTO);
 
         return ResponseEntity.ok(successfullyAuthenticatedDTO);
@@ -44,6 +47,7 @@ public class AuthController {
     })
     @SecurityRequirements
     public ResponseEntity<SuccessfullyAuthenticatedDTO> singIn(@Valid @RequestBody SingInDTO authenticationDTO){
+        log.debug("Received sign-in HTTP request for telegramId={}", authenticationDTO.telegramId());
         SuccessfullyAuthenticatedDTO successfullyAuthenticatedDTO = userService.singIn(authenticationDTO);
 
         return ResponseEntity.ok(successfullyAuthenticatedDTO);

@@ -8,6 +8,7 @@ import com.example.greenhouse.util.enums.TokenType;
 
 import com.example.greenhouse.util.enums.Role;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,7 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Map;
 
+@Slf4j
 @Component
 public class JwtUtil {
     private static final String ISSUER = "greenhouse";
@@ -37,6 +39,7 @@ public class JwtUtil {
     }
 
     public String generateToken(String subject, TokenType tokenType, Map<String, Object> claims, Duration ttl) {
+        log.debug("Generating JWT token for subject={}, tokenType={}, ttl={}", subject, tokenType, ttl);
         Date issuedAt = new Date();
         Date expirationDate = Date.from(ZonedDateTime.now().plus(ttl).toInstant());
 
@@ -51,10 +54,13 @@ public class JwtUtil {
             claims.forEach((key, value) -> appendClaim(jwtBuilder, key, value));
         }
 
-        return jwtBuilder.sign(Algorithm.HMAC256(secret));
+        String token = jwtBuilder.sign(Algorithm.HMAC256(secret));
+        log.debug("JWT token successfully generated for subject={}, expires at={}", subject, expirationDate);
+        return token;
     }
 
     public DecodedJWT verify(String token) {
+        log.debug("Verifying JWT token signature and issuer");
         JWTVerifier verifier = JWT.require(Algorithm.HMAC256(secret))
                 .withIssuer(ISSUER)
                 .build();
@@ -65,6 +71,7 @@ public class JwtUtil {
     public TokenType getTokenType(DecodedJWT jwt) {
         String type = jwt.getClaim(TOKEN_TYPE_CLAIM).asString();
         if (type == null || type.isBlank()) {
+            log.warn("JWT is missing the required '{}' claim", TOKEN_TYPE_CLAIM);
             throw new IllegalArgumentException("Missing token_type claim");
         }
         return TokenType.valueOf(type);
