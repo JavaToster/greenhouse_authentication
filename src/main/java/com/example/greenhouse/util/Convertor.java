@@ -14,7 +14,6 @@ public class Convertor {
         User user = new User();
         user.setTelegramId(authenticationDTO.telegramId());
         user.setEmail(authenticationDTO.email());
-        user.setPassword(authenticationDTO.password());
         return user;
     }
 
