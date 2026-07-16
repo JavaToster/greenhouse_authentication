@@ -25,9 +25,11 @@ public class JwtUtil {
     private static final String ROLE_CLAIM = "role";
     private static final Duration USER_TOKEN_TTL = Duration.ofDays(14);
 
+    private final String secret;
 
-    @Value("${spring.security.jwt.secret}")
-    private String secret;
+    public JwtUtil(@Value("${spring.security.jwt.secret}") String secret) {
+        this.secret = secret;
+    }
 
     public String generateToken(long telegramId, Role role){
         return generateToken(
